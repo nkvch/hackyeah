@@ -1,0 +1,138 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+  <p-card styleClass="w-full max-w-md shadow-lg">
+    <div class="text-center">
+      <!-- UKNF Logo -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-blue-800">UKNF Communication Platform</h1>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="py-8">
+        <p-progressSpinner styleClass="w-16 h-16 mx-auto mb-4"></p-progressSpinner>
+        <h2 class="text-xl font-semibold text-gray-800 mb-2">Activating Your Account</h2>
+        <p class="text-gray-600">Please wait while we verify your activation link...</p>
+      </div>
+
+      <!-- Success State -->
+      <div *ngIf="isSuccess" class="py-8">
+        <div class="mb-6">
+          <i class="pi pi-check-circle text-6xl text-green-500"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Account Activated!</h2>
+        <p class="text-gray-600 mb-6">{{ successMessage }}</p>
+        <p-button 
+          label="Set Password" 
+          icon="pi pi-lock" 
+          (onClick)="onSetPassword()" 
+          styleClass="w-full"
+          severity="success">
+        </p-button>
+      </div>
+
+      <!-- Error State: Invalid Token -->
+      <div *ngIf="state === 'error-invalid'" class="py-8">
+        <div class="mb-6">
+          <i class="pi pi-times-circle text-6xl text-red-500"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Invalid Activation Link</h2>
+        <p-message severity="error" [text]="errorMessage" styleClass="w-full mb-4"></p-message>
+        <p class="text-gray-600 mb-6">
+          This activation link is invalid or has been used. If you need a new activation link, 
+          please contact support or request a new one.
+        </p>
+        <div class="flex flex-col gap-3">
+          <p-button 
+            label="Request New Link" 
+            icon="pi pi-envelope" 
+            (onClick)="onRequestNewLink()" 
+            styleClass="w-full">
+          </p-button>
+          <p-button 
+            label="Go to Login" 
+            icon="pi pi-sign-in" 
+            (onClick)="onGoToLogin()" 
+            styleClass="w-full"
+            severity="secondary"
+            [outlined]="true">
+          </p-button>
+        </div>
+      </div>
+
+      <!-- Error State: Expired Token -->
+      <div *ngIf="state === 'error-expired'" class="py-8">
+        <div class="mb-6">
+          <i class="pi pi-clock text-6xl text-yellow-500"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Link Expired</h2>
+        <p-message severity="warn" [text]="errorMessage" styleClass="w-full mb-4"></p-message>
+        <p class="text-gray-600 mb-6">
+          Your activation link has expired. Activation links are valid for 24 hours. 
+          Please request a new activation link below.
+        </p>
+        <div class="flex flex-col gap-3">
+          <p-button 
+            label="Request New Link" 
+            icon="pi pi-envelope" 
+            (onClick)="onRequestNewLink()" 
+            styleClass="w-full"
+            severity="warn">
+          </p-button>
+          <p-button 
+            label="Go to Login" 
+            icon="pi pi-sign-in" 
+            (onClick)="onGoToLogin()" 
+            styleClass="w-full"
+            severity="secondary"
+            [outlined]="true">
+          </p-button>
+        </div>
+      </div>
+
+      <!-- Error State: Already Used/Activated -->
+      <div *ngIf="state === 'error-already-used'" class="py-8">
+        <div class="mb-6">
+          <i class="pi pi-info-circle text-6xl text-blue-500"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Already Activated</h2>
+        <p-message severity="info" [text]="errorMessage" styleClass="w-full mb-4"></p-message>
+        <p class="text-gray-600 mb-6">
+          This account has already been activated. You can proceed to log in.
+        </p>
+        <p-button 
+          label="Go to Login" 
+          icon="pi pi-sign-in" 
+          (onClick)="onGoToLogin()" 
+          styleClass="w-full">
+        </p-button>
+      </div>
+
+      <!-- Error State: Generic Error -->
+      <div *ngIf="state === 'error-generic'" class="py-8">
+        <div class="mb-6">
+          <i class="pi pi-exclamation-triangle text-6xl text-red-500"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Activation Failed</h2>
+        <p-message severity="error" [text]="errorMessage" styleClass="w-full mb-4"></p-message>
+        <p class="text-gray-600 mb-6">
+          We encountered an error while activating your account. Please try again or request a new activation link.
+        </p>
+        <div class="flex flex-col gap-3">
+          <p-button 
+            label="Request New Link" 
+            icon="pi pi-envelope" 
+            (onClick)="onRequestNewLink()" 
+            styleClass="w-full">
+          </p-button>
+          <p-button 
+            label="Contact Support" 
+            icon="pi pi-question-circle" 
+            styleClass="w-full"
+            severity="secondary"
+            [outlined]="true">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </p-card>
+</div>
+

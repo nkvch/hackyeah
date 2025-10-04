@@ -1,0 +1,140 @@
+<div class="flex min-h-screen items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-gray-900">UKNF Communication Platform</h2>
+      <p class="mt-2 text-sm text-gray-600">Create your account</p>
+    </div>
+
+    <p-card>
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <!-- Success Message -->
+        <p-message 
+          *ngIf="successMessage" 
+          severity="success" 
+          [text]="successMessage"
+          styleClass="w-full">
+        </p-message>
+
+        <!-- Error Message -->
+        <p-message 
+          *ngIf="errorMessage" 
+          severity="error" 
+          [text]="errorMessage"
+          styleClass="w-full">
+        </p-message>
+
+        <!-- First Name -->
+        <div class="flex flex-col gap-2">
+          <label for="firstName" class="font-semibold">First Name <span class="text-red-500">*</span></label>
+          <input 
+            pInputText 
+            id="firstName" 
+            formControlName="firstName" 
+            placeholder="Enter your first name"
+            [class.ng-invalid]="f['firstName'].invalid && f['firstName'].touched"
+            class="w-full" />
+          <small 
+            *ngIf="f['firstName'].invalid && f['firstName'].touched" 
+            class="text-red-500">
+            {{ getErrorMessage('firstName') }}
+          </small>
+        </div>
+
+        <!-- Last Name -->
+        <div class="flex flex-col gap-2">
+          <label for="lastName" class="font-semibold">Last Name <span class="text-red-500">*</span></label>
+          <input 
+            pInputText 
+            id="lastName" 
+            formControlName="lastName" 
+            placeholder="Enter your last name"
+            [class.ng-invalid]="f['lastName'].invalid && f['lastName'].touched"
+            class="w-full" />
+          <small 
+            *ngIf="f['lastName'].invalid && f['lastName'].touched" 
+            class="text-red-500">
+            {{ getErrorMessage('lastName') }}
+          </small>
+        </div>
+
+        <!-- Email -->
+        <div class="flex flex-col gap-2">
+          <label for="email" class="font-semibold">Email <span class="text-red-500">*</span></label>
+          <input 
+            pInputText 
+            id="email" 
+            type="email"
+            formControlName="email" 
+            placeholder="your.email@example.com"
+            [class.ng-invalid]="f['email'].invalid && f['email'].touched"
+            class="w-full" />
+          <small 
+            *ngIf="f['email'].invalid && f['email'].touched" 
+            class="text-red-500">
+            {{ getErrorMessage('email') }}
+          </small>
+        </div>
+
+        <!-- Phone -->
+        <div class="flex flex-col gap-2">
+          <label for="phone" class="font-semibold">Phone Number <span class="text-red-500">*</span></label>
+          <input 
+            pInputText 
+            id="phone" 
+            type="tel"
+            formControlName="phone" 
+            placeholder="+48123456789"
+            [class.ng-invalid]="f['phone'].invalid && f['phone'].touched"
+            class="w-full" />
+          <small 
+            *ngIf="f['phone'].invalid && f['phone'].touched" 
+            class="text-red-500">
+            {{ getErrorMessage('phone') }}
+          </small>
+        </div>
+
+        <!-- PESEL (Masked) -->
+        <div class="flex flex-col gap-2">
+          <label for="pesel" class="font-semibold">PESEL <span class="text-red-500">*</span></label>
+          <input 
+            pInputText 
+            id="pesel" 
+            type="text"
+            formControlName="pesel" 
+            placeholder="12345678901"
+            maxlength="11"
+            [class.ng-invalid]="f['pesel'].invalid && f['pesel'].touched"
+            class="w-full" />
+          <small class="text-gray-500" *ngIf="peselDisplay">
+            Display: {{ peselDisplay }}
+          </small>
+          <small 
+            *ngIf="f['pesel'].invalid && f['pesel'].touched" 
+            class="text-red-500">
+            {{ getErrorMessage('pesel') }}
+          </small>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex flex-col gap-4">
+          <p-button 
+            type="submit" 
+            label="Register" 
+            icon="pi pi-user-plus"
+            [loading]="loading"
+            [disabled]="loading"
+            styleClass="w-full">
+          </p-button>
+
+          <div class="text-center">
+            <span class="text-sm text-gray-600">Already have an account? </span>
+            <a routerLink="/auth/login" class="text-sm text-blue-600 hover:text-blue-800 font-semibold">
+              Login here
+            </a>
+          </div>
+        </div>
+      </form>
+    </p-card>
+  </div>
+</div>
+

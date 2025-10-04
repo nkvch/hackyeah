@@ -1,0 +1,11 @@
+:host {
+  display: block;
+}
+
+// Override PrimeNG styles if needed
+::ng-deep {
+  .p-inputtext.ng-invalid.ng-touched {
+    border-color: #ef4444;
+  }
+}
+

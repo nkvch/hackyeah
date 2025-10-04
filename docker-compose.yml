@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: uknf-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: uknf_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - uknf-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  maildev:
+    image: maildev/maildev:2.1.0
+    container_name: uknf-maildev
+    ports:
+      - "1080:1080"  # Web UI
+      - "1025:1025"  # SMTP Server
+    networks:
+      - uknf-network
+
+  backend:
+    build:
+      context: ./src/Backend
+      dockerfile: Api/UknfPlatform.Api/Dockerfile
+    container_name: uknf-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=uknf_platform;Username=postgres;Password=postgres
+      - Encryption__Key=SecureEncryptionKey123!@#ForDevelopmentOnly
+      - EmailSettings__SmtpServer=maildev
+      - EmailSettings__SmtpPort=1025
+      - EmailSettings__UseSsl=false
+      - EmailSettings__FromEmail=noreply@uknf.gov.pl
+      - EmailSettings__FromName=UKNF Communication Platform
+      - ApplicationSettings__FrontendUrl=http://localhost:4200
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      maildev:
+        condition: service_started
+    networks:
+      - uknf-network
+
+  frontend:
+    build:
+      context: ./src/Frontend/uknf-platform-ui
+      dockerfile: Dockerfile
+    container_name: uknf-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - uknf-network
+
+volumes:
+  postgres_data:
+
+networks:
+  uknf-network:
+    driver: bridge
+
