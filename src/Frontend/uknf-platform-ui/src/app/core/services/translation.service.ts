@@ -18,6 +18,8 @@ export class TranslationService {
   private translations: Translations = {
     // Navigation
     'nav.profile': { en: 'Profile', pl: 'Profil' },
+    'nav.messages': { en: 'Messages', pl: 'Wiadomości' },
+    'nav.logout': { en: 'Logout', pl: 'Wyloguj' },
     'nav.back': { en: 'Back', pl: 'Wstecz' },
     'nav.backToMessages': { en: 'Back to Messages', pl: 'Powrót do wiadomości' },
     'nav.backToProfile': { en: 'Back to Profile', pl: 'Powrót do profilu' },
