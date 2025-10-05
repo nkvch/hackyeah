@@ -4,22 +4,35 @@
     <div class="profile-header">
       <h1 class="profile-title">My Profile</h1>
       <div class="header-actions">
-        <button 
-          *ngIf="!isEditMode && !isLoading" 
+        <button
+          *ngIf="!isEditMode && !isLoading"
           class="btn btn-secondary"
-          routerLink="/access-request">
+          routerLink="/access-request"
+        >
           <span class="icon">📋</span> Access Request
         </button>
-        <button 
-          *ngIf="!isEditMode && !isLoading" 
+        <button *ngIf="!isEditMode && !isLoading" class="btn btn-secondary" routerLink="/messages">
+          <span class="icon">📬</span> View Messages
+        </button>
+        <button
+          *ngIf="!isEditMode && !isLoading"
+          class="btn btn-secondary"
+          routerLink="/messages/compose"
+        >
+          <span class="icon">✉️</span> Compose Message
+        </button>
+        <button
+          *ngIf="!isEditMode && !isLoading"
           class="btn btn-secondary btn-logout"
-          (click)="onLogout()">
+          (click)="onLogout()"
+        >
           <span class="icon">🚪</span> Logout
         </button>
-        <button 
-          *ngIf="!isEditMode && !isLoading" 
+        <button
+          *ngIf="!isEditMode && !isLoading"
           class="btn btn-primary"
-          (click)="enableEditMode()">
+          (click)="enableEditMode()"
+        >
           <span class="icon">✏️</span> Edit Profile
         </button>
       </div>
@@ -45,7 +58,6 @@
 
     <!-- Profile Content -->
     <div *ngIf="profile && !isLoading" class="profile-content">
-      
       <!-- Pending Email Notice -->
       <div *ngIf="profile.pendingEmail" class="alert alert-info">
         <span class="icon">📧</span>
@@ -53,7 +65,6 @@
       </div>
 
       <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
-        
         <!-- Personal Information -->
         <section class="form-section">
           <h2 class="section-title">Personal Information</h2>
@@ -132,7 +143,10 @@
               <span *ngIf="isFieldInvalid('email')" class="error-message">
                 {{ getFieldError('email') }}
               </span>
-              <span *ngIf="isEditMode && profileForm.get('email')?.value !== profile.email" class="help-text info">
+              <span
+                *ngIf="isEditMode && profileForm.get('email')?.value !== profile.email"
+                class="help-text info"
+              >
                 ℹ️ Email changes require confirmation via the new email address
               </span>
             </div>
@@ -184,25 +198,24 @@
 
         <!-- Action Buttons -->
         <div class="form-actions" *ngIf="isEditMode">
-          <button 
-            type="button" 
+          <button
+            type="button"
             class="btn btn-secondary"
             (click)="cancelEdit()"
-            [disabled]="isLoading">
+            [disabled]="isLoading"
+          >
             Cancel
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             class="btn btn-primary"
-            [disabled]="profileForm.invalid || isLoading">
+            [disabled]="profileForm.invalid || isLoading"
+          >
             <span *ngIf="!isLoading">Save Changes</span>
-            <span *ngIf="isLoading">
-              <span class="spinner-small"></span> Saving...
-            </span>
+            <span *ngIf="isLoading"> <span class="spinner-small"></span> Saving... </span>
           </button>
         </div>
       </form>
     </div>
   </div>
 </div>
-

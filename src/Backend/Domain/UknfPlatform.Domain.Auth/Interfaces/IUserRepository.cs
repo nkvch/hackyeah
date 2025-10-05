@@ -46,5 +46,11 @@ public interface IUserRepository
     /// Saves all changes to the database
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all active users except the specified user (for recipient selection)
+    /// Story 5.1: Get available recipients for messaging
+    /// </summary>
+    Task<List<User>> GetAvailableRecipientsAsync(Guid currentUserId, CancellationToken cancellationToken = default);
 }
 

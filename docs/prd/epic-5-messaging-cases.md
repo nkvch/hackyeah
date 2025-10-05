@@ -27,6 +27,7 @@ The Communication Platform requires structured communication channels beyond rep
 ### What This Epic Delivers
 
 This epic implements comprehensive communication functionality including:
+
 - **Two-Way Messaging**: Messages with file attachments between internal and external users
 - **Message Integration**: Messaging used within access requests (Epic 2), reports (Epic 4), and cases
 - **Case Workflow**: Create, manage, and track administrative cases with statuses
@@ -59,6 +60,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can communicate and share documents
 
 **Acceptance Criteria:**
+
 - User can compose message with text content (required)
 - User can attach multiple files in allowed formats: PDF, DOC/DOCX, XLS/XLSX, CSV/TXT, MP3, ZIP
 - System validates file formats before accepting
@@ -80,6 +82,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can read communications and respond
 
 **Acceptance Criteria:**
+
 - User can view list of messages addressed to them
 - Message list displays: Sender, Subject/Preview, Date, Status, Context (if part of case/request/report)
 - User can filter messages by: Status, Sender, Date range, Context
@@ -98,6 +101,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can continue the conversation
 
 **Acceptance Criteria:**
+
 - User can reply to any message addressed to them
 - Reply form pre-populates with original message context
 - User can add text content (required)
@@ -116,6 +120,7 @@ This epic implements comprehensive communication functionality including:
 **So that** users can see which messages require their response
 
 **Acceptance Criteria:**
+
 - Message sent by External User to UKNF has status "Awaits UKNF's response"
 - Message sent by UKNF Employee to External User has status "Awaiting the User's Response"
 - When recipient replies, message status changes to "Closed"
@@ -131,6 +136,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can efficiently manage communications
 
 **Acceptance Criteria:**
+
 - UKNF Employee can view list of all messages
 - Quick filter "My Entities" shows messages related to entities assigned to employee
 - Quick filter "Requires UKNF responses" shows messages with status "Awaits UKNF's response"
@@ -148,6 +154,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can communicate efficiently with groups
 
 **Acceptance Criteria:**
+
 - UKNF Employee can compose message to multiple recipients
 - Employee can select recipients by:
   - Individual entities from list
@@ -166,6 +173,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can formally communicate with UKNF about entity matters
 
 **Acceptance Criteria:**
+
 - User can access "Create Case" functionality (requires Cases permission from Epic 2)
 - User selects entity (if representing multiple)
 - User provides case details:
@@ -188,6 +196,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can track status and history
 
 **Acceptance Criteria:**
+
 - User can view list of all cases for their entity (including Drafts)
 - List displays: Case number, Subject, Category, Priority, Status, Created date, Last updated
 - User can filter by: Status, Category, Priority, Date range
@@ -204,6 +213,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can manage and respond to administrative matters
 
 **Acceptance Criteria:**
+
 - UKNF Employee can view list of all cases (excluding Drafts which are not visible to UKNF)
 - Quick filter "My Entities" shows cases for entities assigned to employee
 - Quick filter "Requires Action" shows cases with statuses: "New case", "To be completed"
@@ -221,6 +231,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can understand the matter and take appropriate action
 
 **Acceptance Criteria:**
+
 - User can view comprehensive case details:
   - Case number
   - Entity name
@@ -250,6 +261,7 @@ This epic implements comprehensive communication functionality including:
 **So that** the workflow is tracked and visible to entities
 
 **Acceptance Criteria:**
+
 - UKNF Employee can change case status
 - Available status transitions:
   - "New case" → "Ongoing" (automatically when Employee opens case)
@@ -271,6 +283,7 @@ This epic implements comprehensive communication functionality including:
 **So that** responsibilities are clear and cases are managed effectively
 
 **Acceptance Criteria:**
+
 - Authorized UKNF Employee can assign case handler
 - Can select handler from list of UKNF Employees
 - Assigned handler receives notification
@@ -285,6 +298,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can obtain additional details needed for resolution
 
 **Acceptance Criteria:**
+
 - UKNF Employee changes case status to "To be completed"
 - Employee provides description of what information/attachments are needed (required text field)
 - Entity receives email notification with description
@@ -301,6 +315,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can prevent confusion
 
 **Acceptance Criteria:**
+
 - UKNF Employee can select case with status "New case"
 - Employee chooses "Cancel" action
 - System verifies entity hasn't viewed case yet
@@ -319,6 +334,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can understand the full lifecycle and all actions taken
 
 **Acceptance Criteria:**
+
 - Users can view case change history
 - History shows: Timestamp, Action/Change, Changed by, Previous value, New value
 - History includes: Status changes, Handler assignments, Priority changes, Messages sent, Attachments added
@@ -333,6 +349,7 @@ This epic implements comprehensive communication functionality including:
 **So that** I can refine them before submission
 
 **Acceptance Criteria:**
+
 - User can open draft cases from their cases list
 - User can edit all case fields (category, priority, subject, description)
 - User can add or remove attachments
@@ -349,24 +366,24 @@ This epic implements comprehensive communication functionality including:
 
 [Source: docs/prd/functions-of-the-communication-module.md]
 
-| Status | Description |
-|--------|-------------|
-| **Draft** | Case saved but not yet submitted. Not visible to UKNF Employee. |
-| **New case** | Case submitted/started. Visible to UKNF Employee. |
-| **Ongoing** | Set automatically after case opened by UKNF Employee or External User. |
+| Status              | Description                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| **Draft**           | Case saved but not yet submitted. Not visible to UKNF Employee.                        |
+| **New case**        | Case submitted/started. Visible to UKNF Employee.                                      |
+| **Ongoing**         | Set automatically after case opened by UKNF Employee or External User.                 |
 | **To be completed** | Set by UKNF Employee, indicates entity needs to supplement information or attachments. |
-| **Cancelled** | Set by UKNF Employee, possible only if entity hasn't yet viewed it. |
-| **Completed** | Set by UKNF Employee, indicates case is resolved. |
+| **Cancelled**       | Set by UKNF Employee, possible only if entity hasn't yet viewed it.                    |
+| **Completed**       | Set by UKNF Employee, indicates case is resolved.                                      |
 
 ## Message Statuses
 
 [Source: docs/prd/functions-of-the-communication-module.md]
 
-| Status | Description |
-|--------|-------------|
-| **Awaits UKNF's response** | Message added by External User |
-| **Awaiting the User's Response** | Message added by UKNF Employee |
-| **Closed** | Message for which there is a response from UKNF Employee/External User |
+| Status                           | Description                                                            |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| **Awaits UKNF's response**       | Message added by External User                                         |
+| **Awaiting the User's Response** | Message added by UKNF Employee                                         |
+| **Closed**                       | Message for which there is a response from UKNF Employee/External User |
 
 ---
 
@@ -386,6 +403,7 @@ This epic implements comprehensive communication functionality including:
 ### Message Data Model
 
 Messages should capture:
+
 - Message ID
 - Sender (user ID and type: Internal/External)
 - Recipient (user ID or entity ID)
@@ -400,6 +418,7 @@ Messages should capture:
 ### Case Data Model
 
 Cases should capture:
+
 - Case number (unique identifier, auto-generated)
 - Entity ID
 - Submitter user ID and contact details
@@ -453,16 +472,19 @@ Cases should capture:
 ## Dependencies
 
 ### Prerequisites
+
 - **Epic 1**: Authentication (authenticated users)
 - **Epic 2**: Authorization (Cases permission)
 - **File storage and security**: Virus scanning, secure storage
 
 ### Integrates With
+
 - **Epic 2**: Authorization & Access Requests (messaging within requests)
 - **Epic 4**: Reporting System (messaging about reports)
 - **Epic 7**: Bulletin Board & Contact Management (contact groups for mass messaging)
 
 ### Blocks
+
 - Can begin development after Epic 1-2 are complete
 - Mass messaging to contact groups enhanced by Epic 7 (but can work with entity selection initially)
 
@@ -519,4 +541,3 @@ Cases should capture:
 - Case handler assignment might need permission controls (who can assign)
 - Mass messaging is powerful - ensure proper logging and confirmation UI
 - File attachment security is critical - thorough validation and scanning required
-

@@ -19,6 +19,34 @@ public interface IMessageRepository
     
     Task<List<Message>> GetMessageThreadAsync(Guid parentMessageId, CancellationToken cancellationToken = default);
     
+    /// <summary>
+    /// Gets messages for a recipient with pagination
+    /// Story 5.2: Receive and View Messages
+    /// </summary>
+    Task<(List<Message> Messages, int TotalCount)> GetMessagesForRecipientAsync(
+        Guid recipientUserId, 
+        int pageNumber, 
+        int pageSize, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Gets message detail with verification that user is a recipient
+    /// Story 5.2: Receive and View Messages
+    /// </summary>
+    Task<Message?> GetMessageDetailForRecipientAsync(
+        Guid messageId, 
+        Guid recipientUserId, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Gets recipient record for marking as read
+    /// Story 5.2: Receive and View Messages
+    /// </summary>
+    Task<MessageRecipient?> GetRecipientAsync(
+        Guid messageId, 
+        Guid recipientUserId, 
+        CancellationToken cancellationToken = default);
+    
     Task AddAsync(Message message, CancellationToken cancellationToken = default);
     
     Task UpdateAsync(Message message, CancellationToken cancellationToken = default);

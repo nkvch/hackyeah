@@ -2,12 +2,14 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UknfPlatform.Application.Communication.Messages.Commands;
+using UknfPlatform.Application.Communication.Messages.Queries;
 
 namespace UknfPlatform.Api.Controllers;
 
 /// <summary>
 /// API for managing messages between UKNF employees and external users
 /// Story 5.1: Send Message with Attachments
+/// Story 5.2: Receive and View Messages
 /// </summary>
 [Authorize]
 [ApiController]
@@ -21,6 +23,26 @@ public class MessagesController : ControllerBase
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    /// <summary>
+    /// Gets list of available recipients for messaging
+    /// Story 5.1: Compose message - get recipients
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of available recipients</returns>
+    [HttpGet("recipients")]
+    [ProducesResponseType(typeof(GetAvailableRecipientsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<GetAvailableRecipientsResponse>> GetAvailableRecipients(
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetAvailableRecipientsQuery();
+        var response = await _mediator.Send(query, cancellationToken);
+        
+        _logger.LogInformation("Retrieved {Count} available recipients", response.Recipients.Count);
+        
+        return Ok(response);
     }
 
     /// <summary>
@@ -60,18 +82,61 @@ public class MessagesController : ControllerBase
     }
 
     /// <summary>
+    /// Gets list of messages for current user
+    /// Story 5.2: Receive and View Messages
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 20)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of messages</returns>
+    [HttpGet]
+    [ProducesResponseType(typeof(GetMessagesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<GetMessagesResponse>> GetMessages(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetMessagesQuery
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var response = await _mediator.Send(query, cancellationToken);
+        
+        _logger.LogInformation("Retrieved {Count} messages for user", response.Messages.Count);
+        
+        return Ok(response);
+    }
+
+    /// <summary>
     /// Gets a message by ID
+    /// Story 5.2: Receive and View Messages
     /// </summary>
     /// <param name="id">Message ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Message details</returns>
     [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MessageDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> GetMessage(Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<MessageDetailDto>> GetMessage(
+        Guid id, 
+        CancellationToken cancellationToken)
     {
-        // TODO: Implement in Story 5.2
-        return NotFound(new { error = "Message retrieval not yet implemented" });
+        var query = new GetMessageDetailQuery(id);
+        var message = await _mediator.Send(query, cancellationToken);
+
+        if (message == null)
+        {
+            _logger.LogWarning("Message {MessageId} not found or not authorized", id);
+            return NotFound(new { error = "Message not found" });
+        }
+
+        _logger.LogInformation("Retrieved message {MessageId}", id);
+        
+        return Ok(message);
     }
 }
 

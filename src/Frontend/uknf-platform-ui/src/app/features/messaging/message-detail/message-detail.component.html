@@ -1,0 +1,182 @@
+<div class="message-detail-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <button (click)="goBack()" class="btn btn-ghost">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="icon"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back to Messages
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading message...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-message">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="error-icon"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+    <p>{{ error }}</p>
+    <button (click)="goBack()" class="btn btn-secondary">Go Back</button>
+  </div>
+
+  <!-- Message Detail -->
+  <div *ngIf="!isLoading && !error && message" class="message-content">
+    <div class="message-card">
+      <!-- Message Header -->
+      <div class="message-header">
+        <div class="message-meta">
+          <div class="sender-info">
+            <div class="sender-avatar">
+              {{ message.senderName.charAt(0).toUpperCase() }}
+            </div>
+            <div class="sender-details">
+              <div class="sender-name">{{ message.senderName }}</div>
+              <div class="sender-email">{{ message.senderEmail }}</div>
+            </div>
+          </div>
+          <div class="message-date">{{ formatDate(message.sentDate) }}</div>
+        </div>
+
+        <h1 class="message-subject">{{ message.subject }}</h1>
+
+        <div class="message-badges">
+          <span [ngClass]="getStatusBadgeClass(message.messageStatus)">
+            {{ message.messageStatus }}
+          </span>
+          <span class="context-badge" *ngIf="message.contextType !== 'Standalone'">
+            {{ message.contextType }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Message Body -->
+      <div class="message-body">
+        <div class="body-content" [innerHTML]="message.body"></div>
+      </div>
+
+      <!-- Attachments -->
+      <div
+        class="message-attachments"
+        *ngIf="message.attachments && message.attachments.length > 0"
+      >
+        <h3 class="attachments-title">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="icon-sm"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+            />
+          </svg>
+          Attachments ({{ message.attachments.length }})
+        </h3>
+        <div class="attachments-list">
+          <div *ngFor="let attachment of message.attachments" class="attachment-item">
+            <div class="attachment-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <div class="attachment-info">
+              <div class="attachment-name">{{ attachment.fileName }}</div>
+              <div class="attachment-meta">
+                {{ formatFileSize(attachment.fileSize) }}
+                <span *ngIf="attachment.contentType"> • {{ attachment.contentType }}</span>
+              </div>
+            </div>
+            <a
+              [href]="getAttachmentDownloadUrl(attachment.attachmentId)"
+              target="_blank"
+              download
+              class="btn btn-sm btn-secondary"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="icon-sm"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              Download
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="message-actions">
+        <button class="btn btn-primary" disabled>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+            />
+          </svg>
+          Reply (Coming Soon)
+        </button>
+        <button (click)="goBack()" class="btn btn-ghost">Back to Messages</button>
+      </div>
+    </div>
+  </div>
+</div>

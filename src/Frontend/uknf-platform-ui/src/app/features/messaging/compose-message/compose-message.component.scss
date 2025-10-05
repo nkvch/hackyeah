@@ -1,0 +1,66 @@
+.compose-message-container {
+  min-height: 100vh;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.card {
+  transition: all 0.3s ease;
+}
+
+.form-group {
+  transition: all 0.2s ease;
+}
+
+// Smooth animations for error/success messages
+.bg-red-50,
+.bg-green-50 {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// File list animations
+.bg-gray-50 {
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+  }
+}
+
+// Button hover effects
+button {
+  transition: all 0.2s ease;
+}
+
+// Input focus styles
+input,
+textarea,
+select {
+  transition: all 0.2s ease;
+}
+
+// Loading spinner
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

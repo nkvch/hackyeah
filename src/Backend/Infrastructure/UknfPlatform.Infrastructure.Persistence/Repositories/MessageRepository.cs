@@ -67,6 +67,52 @@ public class MessageRepository : IMessageRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<(List<Message> Messages, int TotalCount)> GetMessagesForRecipientAsync(
+        Guid recipientUserId, 
+        int pageNumber, 
+        int pageSize, 
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Messages
+            .Include(m => m.Attachments)
+            .Include(m => m.Recipients)
+            .Where(m => m.Recipients.Any(r => r.RecipientUserId == recipientUserId))
+            .OrderByDescending(m => m.SentDate);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var messages = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (messages, totalCount);
+    }
+
+    public async Task<Message?> GetMessageDetailForRecipientAsync(
+        Guid messageId, 
+        Guid recipientUserId, 
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Messages
+            .Include(m => m.Attachments)
+            .Include(m => m.Recipients)
+            .FirstOrDefaultAsync(
+                m => m.Id == messageId && m.Recipients.Any(r => r.RecipientUserId == recipientUserId),
+                cancellationToken);
+    }
+
+    public async Task<MessageRecipient?> GetRecipientAsync(
+        Guid messageId, 
+        Guid recipientUserId, 
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.MessageRecipients
+            .FirstOrDefaultAsync(
+                r => r.MessageId == messageId && r.RecipientUserId == recipientUserId,
+                cancellationToken);
+    }
+
     public async Task AddAsync(Message message, CancellationToken cancellationToken = default)
     {
         await _context.Messages.AddAsync(message, cancellationToken);
