@@ -147,3 +147,7 @@ Thumbs.db
 
 # AI/Debug
 .ai/
+
+# Test data (contains credentials)
+test-data/
+*credentials*.txt
