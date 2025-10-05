@@ -26,7 +26,15 @@ export class AppHeaderComponent implements OnInit {
   }
 
   onLogout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+    this.authService.logout().subscribe({
+      next: () => {
+        // Logout successful, navigation handled by AuthService
+        console.log('Logout successful from navigation');
+      },
+      error: (error) => {
+        // Even if logout API fails, session is cleared by AuthService
+        console.error('Logout error from navigation:', error);
+      },
+    });
   }
 }
