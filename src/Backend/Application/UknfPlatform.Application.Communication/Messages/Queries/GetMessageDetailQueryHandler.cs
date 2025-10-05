@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using UknfPlatform.Application.Shared.Interfaces;
 using UknfPlatform.Domain.Communication.Repositories;
+using UknfPlatform.Domain.Auth.Interfaces;
 
 namespace UknfPlatform.Application.Communication.Messages.Queries;
 
@@ -12,15 +13,18 @@ namespace UknfPlatform.Application.Communication.Messages.Queries;
 public class GetMessageDetailQueryHandler : IRequestHandler<GetMessageDetailQuery, MessageDetailDto?>
 {
     private readonly IMessageRepository _messageRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<GetMessageDetailQueryHandler> _logger;
 
     public GetMessageDetailQueryHandler(
         IMessageRepository messageRepository,
+        IUserRepository userRepository,
         ICurrentUserService currentUserService,
         ILogger<GetMessageDetailQueryHandler> logger)
     {
         _messageRepository = messageRepository ?? throw new ArgumentNullException(nameof(messageRepository));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -60,6 +64,11 @@ public class GetMessageDetailQueryHandler : IRequestHandler<GetMessageDetailQuer
                 request.MessageId, currentUserId);
         }
 
+        // Load sender information
+        var sender = await _userRepository.GetByIdAsync(message.SenderId, cancellationToken);
+        var senderName = sender != null ? $"{sender.FirstName} {sender.LastName}" : "Unknown Sender";
+        var senderEmail = sender?.Email ?? "unknown@example.com";
+
         // Map attachments to DTOs
         var attachmentDtos = message.Attachments
             .Select(a => new MessageAttachmentDto(
@@ -75,8 +84,8 @@ public class GetMessageDetailQueryHandler : IRequestHandler<GetMessageDetailQuer
             message.Id,
             message.Subject,
             message.Body,
-            "Unknown Sender", // TODO: Load sender info in Story 5.2.1
-            "unknown@example.com",
+            senderName,
+            senderEmail,
             message.SentDate,
             message.Status.ToString(),
             true, // Now marked as read

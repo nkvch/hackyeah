@@ -138,5 +138,36 @@ public class MessagesController : ControllerBase
         
         return Ok(message);
     }
+
+    /// <summary>
+    /// Downloads an attachment from a message
+    /// Story 5.2: Download message attachments
+    /// </summary>
+    /// <param name="id">Message ID</param>
+    /// <param name="attachmentId">Attachment ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Attachment file</returns>
+    [HttpGet("{id}/attachments/{attachmentId}/download")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DownloadAttachment(
+        Guid id,
+        Guid attachmentId,
+        CancellationToken cancellationToken)
+    {
+        var query = new DownloadAttachmentQuery(id, attachmentId);
+        var response = await _mediator.Send(query, cancellationToken);
+
+        if (response == null)
+        {
+            _logger.LogWarning("Attachment {AttachmentId} not found or not authorized", attachmentId);
+            return NotFound(new { error = "Attachment not found" });
+        }
+
+        _logger.LogInformation("Downloading attachment {AttachmentId} from message {MessageId}", attachmentId, id);
+
+        return File(response.FileStream, response.ContentType, response.FileName);
+    }
 }
 

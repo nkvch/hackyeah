@@ -94,13 +94,26 @@ export class MessageDetailComponent implements OnInit {
   }
 
   downloadAttachment(attachmentId: string, fileName: string): void {
-    const url = this.getAttachmentDownloadUrl(attachmentId);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (!this.message) return;
+
+    this.messagesService.downloadAttachment(this.message.messageId, attachmentId).subscribe({
+      next: (blob: Blob) => {
+        // Create a blob URL and trigger download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up the blob URL
+        setTimeout(() => window.URL.revokeObjectURL(url), 100);
+      },
+      error: (err) => {
+        console.error('Error downloading attachment:', err);
+        alert('Failed to download attachment. Please try again.');
+      },
+    });
   }
 }

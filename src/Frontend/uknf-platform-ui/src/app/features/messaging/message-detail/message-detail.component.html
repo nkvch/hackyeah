@@ -130,10 +130,8 @@
                 <span *ngIf="attachment.contentType"> • {{ attachment.contentType }}</span>
               </div>
             </div>
-            <a
-              [href]="getAttachmentDownloadUrl(attachment.attachmentId)"
-              target="_blank"
-              download
+            <button
+              (click)="downloadAttachment(attachment.attachmentId, attachment.fileName)"
               class="btn btn-sm btn-secondary"
             >
               <svg
@@ -151,7 +149,7 @@
                 />
               </svg>
               Download
-            </a>
+            </button>
           </div>
         </div>
       </div>

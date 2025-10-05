@@ -91,6 +91,15 @@ export class MessagesService {
   }
 
   /**
+   * Downloads an attachment as a blob (with authentication)
+   * Story 5.2: Receive and View Messages - Download attachments
+   */
+  downloadAttachment(messageId: string, attachmentId: string): Observable<Blob> {
+    const url = `${this.apiUrl}/${messageId}/attachments/${attachmentId}/download`;
+    return this.http.get(url, { responseType: 'blob' });
+  }
+
+  /**
    * Gets list of available recipients for messaging
    * Story 5.1: Compose message - get recipients
    */

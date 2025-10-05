@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using UknfPlatform.Application.Shared.Interfaces;
 using UknfPlatform.Domain.Communication.Repositories;
+using UknfPlatform.Domain.Auth.Interfaces;
 
 namespace UknfPlatform.Application.Communication.Messages.Queries;
 
@@ -12,15 +13,18 @@ namespace UknfPlatform.Application.Communication.Messages.Queries;
 public class GetMessagesQueryHandler : IRequestHandler<GetMessagesQuery, GetMessagesResponse>
 {
     private readonly IMessageRepository _messageRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<GetMessagesQueryHandler> _logger;
 
     public GetMessagesQueryHandler(
         IMessageRepository messageRepository,
+        IUserRepository userRepository,
         ICurrentUserService currentUserService,
         ILogger<GetMessagesQueryHandler> logger)
     {
         _messageRepository = messageRepository ?? throw new ArgumentNullException(nameof(messageRepository));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -41,17 +45,32 @@ public class GetMessagesQueryHandler : IRequestHandler<GetMessagesQuery, GetMess
 
         var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
 
+        // Get unique sender IDs
+        var senderIds = messages.Select(m => m.SenderId).Distinct().ToList();
+        
+        // Load all senders in one batch
+        var senders = new Dictionary<Guid, (string Name, string Email)>();
+        foreach (var senderId in senderIds)
+        {
+            var sender = await _userRepository.GetByIdAsync(senderId, cancellationToken);
+            if (sender != null)
+            {
+                senders[senderId] = ($"{sender.FirstName} {sender.LastName}", sender.Email);
+            }
+        }
+
         // Map to DTOs
         var messageSummaries = messages.Select(m =>
         {
             var recipient = m.Recipients.FirstOrDefault(r => r.RecipientUserId == currentUserId);
+            var (senderName, senderEmail) = senders.GetValueOrDefault(m.SenderId, ("Unknown Sender", "unknown@example.com"));
             
             return new MessageSummaryDto(
                 m.Id,
                 m.Subject,
                 m.Body.Length > 200 ? m.Body.Substring(0, 200) + "..." : m.Body,
-                "Unknown Sender", // TODO: Load sender info in Story 5.2.1
-                "unknown@example.com",
+                senderName,
+                senderEmail,
                 m.SentDate,
                 m.Status.ToString(),
                 recipient?.IsRead ?? false,

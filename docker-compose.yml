@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -24,8 +24,8 @@ services:
     image: maildev/maildev:2.1.0
     container_name: uknf-maildev
     ports:
-      - "1080:1080"  # Web UI
-      - "1025:1025"  # SMTP Server
+      - "1080:1080" # Web UI
+      - "1025:1025" # SMTP Server
     networks:
       - uknf-network
 
@@ -36,7 +36,7 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "5672:5672"   # AMQP port
+      - "5672:5672" # AMQP port
       - "15672:15672" # Management UI
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
@@ -69,6 +69,8 @@ services:
       - RabbitMQ__Password=guest
     ports:
       - "8080:8080"
+    volumes:
+      - backend_storage:/app/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -94,8 +96,8 @@ services:
 volumes:
   postgres_data:
   rabbitmq_data:
+  backend_storage:
 
 networks:
   uknf-network:
     driver: bridge
-
