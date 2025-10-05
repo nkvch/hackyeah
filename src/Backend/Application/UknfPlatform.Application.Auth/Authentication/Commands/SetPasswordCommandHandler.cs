@@ -5,6 +5,7 @@ using UknfPlatform.Application.Shared.Interfaces;
 using UknfPlatform.Application.Shared.Settings;
 using UknfPlatform.Domain.Auth.Entities;
 using UknfPlatform.Domain.Auth.Interfaces;
+using UknfPlatform.Domain.Auth.Repositories;
 using UknfPlatform.Domain.Shared.Exceptions;
 
 namespace UknfPlatform.Application.Auth.Authentication.Commands;
@@ -18,6 +19,7 @@ public class SetPasswordCommandHandler : IRequestHandler<SetPasswordCommand, Set
     private readonly IActivationTokenRepository _activationTokenRepository;
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHistoryRepository _passwordHistoryRepository;
+    private readonly IAccessRequestRepository _accessRequestRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly PasswordPolicySettings _passwordPolicy;
     private readonly ApplicationSettings _applicationSettings;
@@ -27,6 +29,7 @@ public class SetPasswordCommandHandler : IRequestHandler<SetPasswordCommand, Set
         IActivationTokenRepository activationTokenRepository,
         IUserRepository userRepository,
         IPasswordHistoryRepository passwordHistoryRepository,
+        IAccessRequestRepository accessRequestRepository,
         IPasswordHasher passwordHasher,
         IOptions<PasswordPolicySettings> passwordPolicy,
         IOptions<ApplicationSettings> applicationSettings,
@@ -35,6 +38,7 @@ public class SetPasswordCommandHandler : IRequestHandler<SetPasswordCommand, Set
         _activationTokenRepository = activationTokenRepository ?? throw new ArgumentNullException(nameof(activationTokenRepository));
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _passwordHistoryRepository = passwordHistoryRepository ?? throw new ArgumentNullException(nameof(passwordHistoryRepository));
+        _accessRequestRepository = accessRequestRepository ?? throw new ArgumentNullException(nameof(accessRequestRepository));
         _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
         _passwordPolicy = passwordPolicy?.Value ?? throw new ArgumentNullException(nameof(passwordPolicy));
         _applicationSettings = applicationSettings?.Value ?? throw new ArgumentNullException(nameof(applicationSettings));
@@ -116,6 +120,21 @@ public class SetPasswordCommandHandler : IRequestHandler<SetPasswordCommand, Set
         await _userRepository.UpdateAsync(user, cancellationToken);
         await _userRepository.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Password set successfully for user {UserId}", user.Id);
+
+        // 5a. Story 2.1: Automatically create access request after activation
+        var existingAccessRequest = await _accessRequestRepository.GetByUserIdAsync(user.Id, cancellationToken);
+        if (existingAccessRequest == null)
+        {
+            var accessRequest = AccessRequest.CreateForUser(user.Id);
+            await _accessRequestRepository.AddAsync(accessRequest, cancellationToken);
+            
+            _logger.LogInformation("Access request created automatically for user {UserId}, RequestId: {AccessRequestId}", 
+                user.Id, accessRequest.Id);
+        }
+        else
+        {
+            _logger.LogInformation("Access request already exists for user {UserId}, skipping creation", user.Id);
+        }
 
         // 6. Mark activation token as used
         activationToken.MarkAsUsed();

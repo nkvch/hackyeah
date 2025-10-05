@@ -82,7 +82,6 @@ public class ActivateAccountCommandHandler : IRequestHandler<ActivateAccountComm
         activationToken.MarkAsUsed();
 
         await _activationTokenRepository.UpdateAsync(activationToken, cancellationToken);
-        await _activationTokenRepository.SaveChangesAsync(cancellationToken);
 
         // Story 2.1: Automatically create access request after activation
         var existingAccessRequest = await _accessRequestRepository.GetByUserIdAsync(activationToken.User.Id, cancellationToken);
@@ -90,7 +89,6 @@ public class ActivateAccountCommandHandler : IRequestHandler<ActivateAccountComm
         {
             var accessRequest = AccessRequest.CreateForUser(activationToken.User.Id);
             await _accessRequestRepository.AddAsync(accessRequest, cancellationToken);
-            await _activationTokenRepository.SaveChangesAsync(cancellationToken); // Reuse same UnitOfWork
             
             _logger.LogInformation("Access request created automatically for user {UserId}, RequestId: {AccessRequestId}", 
                 activationToken.User.Id, accessRequest.Id);
@@ -99,6 +97,9 @@ public class ActivateAccountCommandHandler : IRequestHandler<ActivateAccountComm
         {
             _logger.LogInformation("Access request already exists for user {UserId}, skipping creation", activationToken.User.Id);
         }
+
+        // Save all changes (activation + access request) in a single transaction
+        await _activationTokenRepository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Account activated successfully for user {UserId}", activationToken.User.Id);
 
