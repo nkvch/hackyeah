@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Domain\UknfPlatform.Domain.Communication\UknfPlatform.Domain.Communication.csproj" />
+    <ProjectReference Include="..\..\Domain\UknfPlatform.Domain.Auth\UknfPlatform.Domain.Auth.csproj" />
     <ProjectReference Include="..\UknfPlatform.Application.Shared\UknfPlatform.Application.Shared.csproj" />
   </ItemGroup>
 

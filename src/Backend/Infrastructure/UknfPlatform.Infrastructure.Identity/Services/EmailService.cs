@@ -64,6 +64,25 @@ public class EmailService : IEmailService
         await SendEmailWithRetryAsync(email, subject, htmlBody, textBody, cancellationToken);
     }
 
+    public async Task SendNewMessageNotificationAsync(
+        string email,
+        string senderName,
+        string subject,
+        CancellationToken cancellationToken = default)
+    {
+        var emailSubject = $"New Message from {senderName}";
+        var htmlBody = $@"
+            <h2>New Message Received</h2>
+            <p>You have received a new message from <strong>{senderName}</strong></p>
+            <p><strong>Subject:</strong> {subject}</p>
+            <p>Please log in to the UKNF Communication Platform to view and respond to this message.</p>
+            <p><a href='http://localhost:4200/messages'>View Message</a></p>
+        ";
+        var textBody = $"You have received a new message from {senderName}.\n\nSubject: {subject}\n\nPlease log in to view and respond.";
+
+        await SendEmailWithRetryAsync(email, emailSubject, htmlBody, textBody, cancellationToken);
+    }
+
     private async Task SendEmailWithRetryAsync(
         string toEmail,
         string subject,

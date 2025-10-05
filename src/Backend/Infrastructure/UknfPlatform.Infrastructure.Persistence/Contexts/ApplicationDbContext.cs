@@ -26,6 +26,9 @@ public class ApplicationDbContext : DbContext
     // Communication Domain
     public DbSet<Report> Reports => Set<Report>();
     public DbSet<ValidationResult> ValidationResults => Set<ValidationResult>();
+    public DbSet<Message> Messages => Set<Message>(); // Story 5.1
+    public DbSet<MessageAttachment> MessageAttachments => Set<MessageAttachment>(); // Story 5.1
+    public DbSet<MessageRecipient> MessageRecipients => Set<MessageRecipient>(); // Story 5.1
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

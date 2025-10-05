@@ -43,5 +43,19 @@ public interface IEmailService
         string firstName,
         string confirmationUrl,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends a notification email when a new message is received
+    /// Story 5.1: Message notification
+    /// </summary>
+    /// <param name="email">Recipient email address</param>
+    /// <param name="senderName">Name of the message sender</param>
+    /// <param name="subject">Message subject</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task SendNewMessageNotificationAsync(
+        string email,
+        string senderName,
+        string subject,
+        CancellationToken cancellationToken = default);
 }
 

@@ -134,6 +134,7 @@ builder.Services.AddScoped<IPasswordHistoryRepository, PasswordHistoryRepository
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IAuthenticationAuditLogRepository, AuthenticationAuditLogRepository>();
 builder.Services.AddScoped<UknfPlatform.Domain.Auth.Repositories.IAccessRequestRepository, UknfPlatform.Infrastructure.Persistence.Repositories.AccessRequestRepository>(); // Story 2.1
+builder.Services.AddScoped<UknfPlatform.Domain.Communication.Repositories.IMessageRepository, UknfPlatform.Infrastructure.Persistence.Repositories.MessageRepository>(); // Story 5.1
 
 // Repositories - Communication Domain
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
