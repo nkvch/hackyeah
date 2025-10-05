@@ -106,4 +106,21 @@ export class MessagesService {
   getAvailableRecipients(): Observable<GetAvailableRecipientsResponse> {
     return this.http.get<GetAvailableRecipientsResponse>(`${this.apiUrl}/recipients`);
   }
+
+  /**
+   * Replies to an existing message
+   * Story 5.3: Reply to Message
+   */
+  replyToMessage(parentMessageId: string, body: string, attachments: File[]): Observable<any> {
+    const formData = new FormData();
+
+    formData.append('body', body);
+
+    // Add file attachments
+    attachments.forEach((file) => {
+      formData.append(`attachments`, file, file.name);
+    });
+
+    return this.http.post(`${this.apiUrl}/${parentMessageId}/reply`, formData);
+  }
 }

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { MessagesService } from '../../../core/services/messages.service';
 import { MessageDetail } from '../../../core/models/message.model';
@@ -7,11 +8,12 @@ import { MessageDetail } from '../../../core/models/message.model';
 /**
  * Message detail component
  * Story 5.2: Receive and View Messages (MVP)
+ * Story 5.3: Reply to Message
  */
 @Component({
   selector: 'app-message-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './message-detail.component.html',
   styleUrl: './message-detail.component.scss',
 })
@@ -19,6 +21,14 @@ export class MessageDetailComponent implements OnInit {
   message: MessageDetail | null = null;
   isLoading = false;
   error: string | null = null;
+
+  // Reply form state
+  showReplyForm = false;
+  replyBody = '';
+  replyAttachments: File[] = [];
+  replyLoading = false;
+  replyError: string | null = null;
+  replySuccess: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -115,5 +125,61 @@ export class MessageDetailComponent implements OnInit {
         alert('Failed to download attachment. Please try again.');
       },
     });
+  }
+
+  toggleReplyForm(): void {
+    this.showReplyForm = !this.showReplyForm;
+    if (!this.showReplyForm) {
+      this.clearReplyForm();
+    }
+  }
+
+  onReplyFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.replyAttachments = [...this.replyAttachments, ...Array.from(input.files)];
+    }
+  }
+
+  removeReplyAttachment(index: number): void {
+    this.replyAttachments.splice(index, 1);
+  }
+
+  sendReply(): void {
+    if (!this.message || !this.replyBody.trim()) {
+      this.replyError = 'Reply body is required';
+      return;
+    }
+
+    this.replyLoading = true;
+    this.replyError = null;
+    this.replySuccess = null;
+
+    this.messagesService
+      .replyToMessage(this.message.messageId, this.replyBody, this.replyAttachments)
+      .subscribe({
+        next: (response) => {
+          this.replySuccess = 'Reply sent successfully!';
+          this.replyLoading = false;
+          this.showReplyForm = false;
+          this.clearReplyForm();
+          // Refresh to show updated status
+          setTimeout(() => {
+            this.router.navigate(['/messages']);
+          }, 1500);
+        },
+        error: (err) => {
+          console.error('Error sending reply:', err);
+          this.replyError = err.error?.error || 'Failed to send reply. Please try again.';
+          this.replyLoading = false;
+        },
+      });
+  }
+
+  clearReplyForm(): void {
+    this.replyBody = '';
+    this.replyAttachments = [];
+    this.replyError = null;
+    this.replySuccess = null;
   }
 }

@@ -169,5 +169,52 @@ public class MessagesController : ControllerBase
 
         return File(response.FileStream, response.ContentType, response.FileName);
     }
+
+    /// <summary>
+    /// Replies to an existing message
+    /// Story 5.3: Reply to Message
+    /// </summary>
+    /// <param name="id">Parent message ID</param>
+    /// <param name="command">Reply details and attachments</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Reply confirmation</returns>
+    [HttpPost("{id}/reply")]
+    [ProducesResponseType(typeof(ReplyToMessageResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequestSizeLimit(104_857_600)] // 100 MB max request size
+    public async Task<ActionResult<ReplyToMessageResponse>> ReplyToMessage(
+        Guid id,
+        [FromForm] ReplyToMessageCommand command,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Set parent message ID from route parameter
+            command.ParentMessageId = id;
+
+            var response = await _mediator.Send(command, cancellationToken);
+            
+            _logger.LogInformation("Reply {ReplyMessageId} sent to message {ParentMessageId}", 
+                response.ReplyMessageId, id);
+            
+            return CreatedAtAction(
+                nameof(GetMessage),
+                new { id = response.ReplyMessageId },
+                response);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "User not authorized to reply to message {MessageId}", id);
+            return Forbid();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error replying to message {MessageId}", id);
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 }
 
