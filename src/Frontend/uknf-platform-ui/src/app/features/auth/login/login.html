@@ -1,9 +1,14 @@
 <div class="auth-container">
   <div class="auth-card">
+    <!-- Language Switcher -->
+    <div class="language-switcher-container">
+      <app-language-switcher></app-language-switcher>
+    </div>
+
     <!-- Header -->
     <div class="auth-header">
       <h1 class="auth-title">UKNF Communication Platform</h1>
-      <p class="auth-subtitle">Sign in to your account</p>
+      <p class="auth-subtitle">{{ t.translate('login.title') }}</p>
     </div>
 
     <!-- Success Message -->
@@ -23,7 +28,7 @@
       <!-- Email Field -->
       <div class="form-group">
         <label for="email" class="form-label">
-          Email <span class="required">*</span>
+          {{ t.translate('login.email') }} <span class="required">*</span>
         </label>
         <input
           id="email"
@@ -31,7 +36,7 @@
           formControlName="email"
           class="form-input"
           [class.error]="email?.invalid && (email?.dirty || email?.touched)"
-          placeholder="your.email@example.com"
+          [placeholder]="t.translate('login.emailPlaceholder')"
         />
         <span *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
           <span *ngIf="email?.errors?.['required']">Email is required</span>
@@ -42,7 +47,7 @@
       <!-- Password Field -->
       <div class="form-group">
         <label for="password" class="form-label">
-          Password <span class="required">*</span>
+          {{ t.translate('login.password') }} <span class="required">*</span>
         </label>
         <div class="password-wrapper">
           <input
@@ -51,7 +56,7 @@
             formControlName="password"
             class="form-input"
             [class.error]="password?.invalid && (password?.dirty || password?.touched)"
-            placeholder="Enter your password"
+            [placeholder]="t.translate('login.passwordPlaceholder')"
           />
           <button
             type="button"
@@ -62,7 +67,10 @@
             {{ showPassword ? '👁️' : '👁️‍🗨️' }}
           </button>
         </div>
-        <span *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="error-message">
+        <span
+          *ngIf="password?.invalid && (password?.dirty || password?.touched)"
+          class="error-message"
+        >
           Password is required
         </span>
       </div>
@@ -79,10 +87,10 @@
         [disabled]="loginForm.invalid || isLoading"
       >
         <span *ngIf="!isLoading">
-          <span class="icon">🔐</span> Sign In
+          <span class="icon">🔐</span> {{ t.translate('login.loginButton') }}
         </span>
         <span *ngIf="isLoading">
-          <span class="spinner-small"></span> Signing in...
+          <span class="spinner-small"></span> {{ t.translate('login.loggingIn') }}
         </span>
       </button>
     </form>
@@ -90,12 +98,14 @@
     <!-- Footer Links -->
     <div class="auth-footer">
       <p class="footer-text">
-        Don't have an account?
-        <a routerLink="/register" class="link">Register here</a>
+        {{ t.translate('login.noAccount') }}
+        <a routerLink="/register" class="link">{{ t.translate('login.register') }}</a>
       </p>
       <p class="footer-text">
-        Didn't receive activation email?
-        <a routerLink="/resend-activation" class="link">Resend activation</a>
+        {{ t.translate('login.needActivation') }}
+        <a routerLink="/resend-activation" class="link">{{
+          t.translate('login.resendActivation')
+        }}</a>
       </p>
     </div>
   </div>

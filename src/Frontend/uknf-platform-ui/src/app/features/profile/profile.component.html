@@ -2,46 +2,38 @@
   <div class="profile-card">
     <!-- Header -->
     <div class="profile-header">
-      <h1 class="profile-title">My Profile</h1>
-      <div class="header-actions">
-        <button
-          *ngIf="!isEditMode && !isLoading"
-          class="btn btn-secondary"
-          routerLink="/access-request"
-        >
-          <span class="icon">📋</span> Access Request
-        </button>
-        <button *ngIf="!isEditMode && !isLoading" class="btn btn-secondary" routerLink="/messages">
-          <span class="icon">📬</span> View Messages
-        </button>
-        <button
-          *ngIf="!isEditMode && !isLoading"
-          class="btn btn-secondary"
-          routerLink="/messages/compose"
-        >
-          <span class="icon">✉️</span> Compose Message
-        </button>
-        <button
-          *ngIf="!isEditMode && !isLoading"
-          class="btn btn-secondary btn-logout"
-          (click)="onLogout()"
-        >
-          <span class="icon">🚪</span> Logout
-        </button>
-        <button
-          *ngIf="!isEditMode && !isLoading"
-          class="btn btn-primary"
-          (click)="enableEditMode()"
-        >
-          <span class="icon">✏️</span> Edit Profile
-        </button>
-      </div>
+      <h1 class="profile-title">{{ t.translate('profile.title') }}</h1>
+      <app-language-switcher></app-language-switcher>
+    </div>
+
+    <!-- Quick Actions -->
+    <div *ngIf="!isEditMode && !isLoading" class="quick-actions">
+      <button class="action-card" routerLink="/access-request">
+        <span class="action-icon">📋</span>
+        <span class="action-label">{{ t.translate('profile.accessRequest') }}</span>
+      </button>
+      <button class="action-card" routerLink="/messages">
+        <span class="action-icon">📬</span>
+        <span class="action-label">{{ t.translate('profile.viewMessages') }}</span>
+      </button>
+      <button class="action-card" routerLink="/messages/compose">
+        <span class="action-icon">✉️</span>
+        <span class="action-label">{{ t.translate('profile.composeMessage') }}</span>
+      </button>
+      <button class="action-card" (click)="enableEditMode()">
+        <span class="action-icon">✏️</span>
+        <span class="action-label">{{ t.translate('profile.editProfile') }}</span>
+      </button>
+      <button class="action-card action-logout" (click)="onLogout()">
+        <span class="action-icon">🚪</span>
+        <span class="action-label">{{ t.translate('profile.logout') }}</span>
+      </button>
     </div>
 
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state">
       <div class="spinner"></div>
-      <p>Loading...</p>
+      <p>{{ t.translate('profile.loading') }}</p>
     </div>
 
     <!-- Success Message -->
@@ -67,13 +59,13 @@
       <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
         <!-- Personal Information -->
         <section class="form-section">
-          <h2 class="section-title">Personal Information</h2>
+          <h2 class="section-title">{{ t.translate('profile.personalInfo') }}</h2>
 
           <div class="form-row">
             <!-- First Name -->
             <div class="form-group">
               <label for="firstName" class="form-label">
-                First Name <span class="required">*</span>
+                {{ t.translate('profile.firstName') }} <span class="required">*</span>
               </label>
               <input
                 id="firstName"
@@ -91,7 +83,7 @@
             <!-- Last Name -->
             <div class="form-group">
               <label for="lastName" class="form-label">
-                Last Name <span class="required">*</span>
+                {{ t.translate('profile.lastName') }} <span class="required">*</span>
               </label>
               <input
                 id="lastName"
@@ -111,7 +103,7 @@
             <!-- Phone Number -->
             <div class="form-group">
               <label for="phoneNumber" class="form-label">
-                Phone Number <span class="required">*</span>
+                {{ t.translate('profile.phoneNumber') }} <span class="required">*</span>
               </label>
               <input
                 id="phoneNumber"
@@ -130,7 +122,7 @@
             <!-- Email -->
             <div class="form-group">
               <label for="email" class="form-label">
-                Email Address <span class="required">*</span>
+                {{ t.translate('profile.email') }} <span class="required">*</span>
               </label>
               <input
                 id="email"
@@ -155,22 +147,22 @@
 
         <!-- Account Information (Read-only) -->
         <section class="form-section">
-          <h2 class="section-title">Account Information</h2>
+          <h2 class="section-title">{{ t.translate('profile.accountInfo') }}</h2>
 
           <div class="form-row">
             <!-- PESEL (Masked) -->
             <div class="form-group">
-              <label class="form-label">PESEL</label>
+              <label class="form-label">{{ t.translate('profile.pesel') }}</label>
               <div class="readonly-field">
                 <span class="masked-value">***********{{ profile.peselLast4 }}</span>
-                <span class="badge">Protected</span>
+                <span class="badge">{{ t.translate('profile.protected') }}</span>
               </div>
-              <span class="help-text">PESEL cannot be changed</span>
+              <span class="help-text">{{ t.translate('profile.peselCannotChange') }}</span>
             </div>
 
             <!-- User Type -->
             <div class="form-group">
-              <label class="form-label">Account Type</label>
+              <label class="form-label">{{ t.translate('profile.accountType') }}</label>
               <div class="readonly-field">
                 <span class="badge badge-info">{{ profile.userType }}</span>
               </div>
@@ -180,7 +172,7 @@
           <div class="form-row">
             <!-- Created Date -->
             <div class="form-group">
-              <label class="form-label">Account Created</label>
+              <label class="form-label">{{ t.translate('profile.accountCreated') }}</label>
               <div class="readonly-field">
                 {{ formatDate(profile.createdDate) }}
               </div>
@@ -188,7 +180,7 @@
 
             <!-- Last Login -->
             <div class="form-group">
-              <label class="form-label">Last Login</label>
+              <label class="form-label">{{ t.translate('profile.lastLogin') }}</label>
               <div class="readonly-field">
                 {{ formatDate(profile.lastLoginDate) }}
               </div>
@@ -204,15 +196,17 @@
             (click)="cancelEdit()"
             [disabled]="isLoading"
           >
-            Cancel
+            {{ t.translate('profile.cancel') }}
           </button>
           <button
             type="submit"
             class="btn btn-primary"
             [disabled]="profileForm.invalid || isLoading"
           >
-            <span *ngIf="!isLoading">Save Changes</span>
-            <span *ngIf="isLoading"> <span class="spinner-small"></span> Saving... </span>
+            <span *ngIf="!isLoading">{{ t.translate('profile.save') }}</span>
+            <span *ngIf="isLoading">
+              <span class="spinner-small"></span> {{ t.translate('profile.saving') }}
+            </span>
           </button>
         </div>
       </form>

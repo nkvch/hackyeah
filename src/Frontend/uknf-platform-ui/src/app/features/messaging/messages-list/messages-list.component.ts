@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MessagesService } from '../../../core/services/messages.service';
 import { MessageSummary, GetMessagesResponse } from '../../../core/models/message.model';
+import { TranslationService } from '../../../core/services/translation.service';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 /**
  * Messages list component
@@ -11,7 +13,7 @@ import { MessageSummary, GetMessagesResponse } from '../../../core/models/messag
 @Component({
   selector: 'app-messages-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LanguageSwitcherComponent],
   templateUrl: './messages-list.component.html',
   styleUrl: './messages-list.component.scss',
 })
@@ -24,7 +26,10 @@ export class MessagesListComponent implements OnInit {
   isLoading = false;
   error: string | null = null;
 
-  constructor(private messagesService: MessagesService) {}
+  constructor(
+    private messagesService: MessagesService,
+    public t: TranslationService,
+  ) {}
 
   ngOnInit(): void {
     this.loadMessages();

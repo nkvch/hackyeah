@@ -7,6 +7,8 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { MessageModule } from 'primeng/message';
 import { AuthService } from '../../../core/services/auth.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-register',
@@ -18,15 +20,17 @@ import { AuthService } from '../../../core/services/auth.service';
     InputTextModule,
     ButtonModule,
     CardModule,
-    MessageModule
+    MessageModule,
+    LanguageSwitcherComponent,
   ],
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss']
+  styleUrls: ['./register.component.scss'],
 })
 export class RegisterComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  public t = inject(TranslationService);
 
   registerForm!: FormGroup;
   loading = false;
@@ -40,11 +44,19 @@ export class RegisterComponent implements OnInit {
       lastName: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
       phone: ['', [Validators.required, Validators.pattern(/^\+(?:[0-9] ?){6,14}[0-9]$/)]],
-      pesel: ['', [Validators.required, Validators.pattern(/^\d{11}$/), Validators.minLength(11), Validators.maxLength(11)]]
+      pesel: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^\d{11}$/),
+          Validators.minLength(11),
+          Validators.maxLength(11),
+        ],
+      ],
     });
 
     // Watch PESEL field for masking
-    this.registerForm.get('pesel')?.valueChanges.subscribe(value => {
+    this.registerForm.get('pesel')?.valueChanges.subscribe((value) => {
       if (value && value.length >= 4) {
         const last4 = value.slice(-4);
         this.peselDisplay = '*'.repeat(value.length - 4) + last4;
@@ -96,14 +108,14 @@ export class RegisterComponent implements OnInit {
       lastName: 'Last name',
       email: 'Email',
       phone: 'Phone number',
-      pesel: 'PESEL'
+      pesel: 'PESEL',
     };
     return fieldNames[controlName] || controlName;
   }
 
   onSubmit(): void {
     if (this.registerForm.invalid) {
-      Object.keys(this.registerForm.controls).forEach(key => {
+      Object.keys(this.registerForm.controls).forEach((key) => {
         this.registerForm.get(key)?.markAsTouched();
       });
       return;
@@ -117,7 +129,7 @@ export class RegisterComponent implements OnInit {
       next: (response) => {
         this.loading = false;
         this.successMessage = response.message;
-        
+
         // Navigate to login page after 3 seconds
         setTimeout(() => {
           this.router.navigate(['/auth/login']);
@@ -126,8 +138,7 @@ export class RegisterComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         this.errorMessage = error.message || 'Registration failed. Please try again.';
-      }
+      },
     });
   }
 }
-

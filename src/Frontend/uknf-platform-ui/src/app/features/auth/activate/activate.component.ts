@@ -6,8 +6,16 @@ import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageModule } from 'primeng/message';
 import { AuthService } from '../../../core/services/auth.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
-type ActivationState = 'loading' | 'success' | 'error-invalid' | 'error-expired' | 'error-already-used' | 'error-generic';
+type ActivationState =
+  | 'loading'
+  | 'success'
+  | 'error-invalid'
+  | 'error-expired'
+  | 'error-already-used'
+  | 'error-generic';
 
 @Component({
   selector: 'app-activate',
@@ -17,10 +25,11 @@ type ActivationState = 'loading' | 'success' | 'error-invalid' | 'error-expired'
     CardModule,
     ButtonModule,
     ProgressSpinnerModule,
-    MessageModule
+    MessageModule,
+    LanguageSwitcherComponent,
   ],
   templateUrl: './activate.component.html',
-  styleUrl: './activate.component.scss'
+  styleUrl: './activate.component.scss',
 })
 export class ActivateComponent implements OnInit {
   state: ActivationState = 'loading';
@@ -30,6 +39,7 @@ export class ActivateComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private authService = inject(AuthService);
+  public t = inject(TranslationService);
 
   ngOnInit(): void {
     // Get token from query parameters
@@ -55,7 +65,7 @@ export class ActivateComponent implements OnInit {
       },
       error: (error: Error) => {
         this.handleError(error.message);
-      }
+      },
     });
   }
 
@@ -104,4 +114,3 @@ export class ActivateComponent implements OnInit {
     return this.state === 'error-expired';
   }
 }
-

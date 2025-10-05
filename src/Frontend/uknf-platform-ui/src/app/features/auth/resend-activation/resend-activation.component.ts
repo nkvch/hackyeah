@@ -7,6 +7,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { AuthService } from '../../../core/services/auth.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-resend-activation',
@@ -17,24 +19,26 @@ import { AuthService } from '../../../core/services/auth.service';
     CardModule,
     InputTextModule,
     ButtonModule,
-    MessageModule
+    MessageModule,
+    LanguageSwitcherComponent,
   ],
   templateUrl: './resend-activation.component.html',
-  styleUrl: './resend-activation.component.scss'
+  styleUrl: './resend-activation.component.scss',
 })
 export class ResendActivationComponent implements OnInit {
   resendForm!: FormGroup;
   isLoading = false;
   successMessage = '';
   errorMessage = '';
-  
+
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  public t = inject(TranslationService);
 
   ngOnInit(): void {
     this.resendForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]]
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
     });
   }
 
@@ -63,7 +67,7 @@ export class ResendActivationComponent implements OnInit {
       error: (error: Error) => {
         this.errorMessage = error.message;
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -75,4 +79,3 @@ export class ResendActivationComponent implements OnInit {
     this.router.navigate(['/auth/register']);
   }
 }
-

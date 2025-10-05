@@ -4,18 +4,21 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { UserProfileDto } from '../../core/models/profile.model';
+import { TranslationService } from '../../core/services/translation.service';
+import { LanguageSwitcherComponent } from '../../shared/components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LanguageSwitcherComponent],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.scss']
+  styleUrls: ['./profile.component.scss'],
 })
 export class ProfileComponent implements OnInit {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  public t = inject(TranslationService);
 
   profile: UserProfileDto | null = null;
   profileForm!: FormGroup;
@@ -36,7 +39,7 @@ export class ProfileComponent implements OnInit {
       firstName: ['', [Validators.required, Validators.maxLength(100)]],
       lastName: ['', [Validators.required, Validators.maxLength(100)]],
       phoneNumber: ['', [Validators.required, Validators.pattern(this.phonePattern)]],
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]]
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
     });
 
     // Disable form initially (view mode)
@@ -57,7 +60,7 @@ export class ProfileComponent implements OnInit {
         this.errorMessage = error.message || 'Failed to load profile';
         this.isLoading = false;
         console.error('Error loading profile:', error);
-      }
+      },
     });
   }
 
@@ -66,7 +69,7 @@ export class ProfileComponent implements OnInit {
       firstName: profile.firstName,
       lastName: profile.lastName,
       phoneNumber: profile.phoneNumber,
-      email: profile.email
+      email: profile.email,
     });
   }
 
@@ -108,7 +111,8 @@ export class ProfileComponent implements OnInit {
         this.isLoading = false;
 
         if (response.emailChangeRequiresConfirmation) {
-          this.successMessage = 'Profile updated successfully. Please check your new email to confirm the email change.';
+          this.successMessage =
+            'Profile updated successfully. Please check your new email to confirm the email change.';
         } else {
           this.successMessage = 'Profile updated successfully.';
         }
@@ -122,12 +126,12 @@ export class ProfileComponent implements OnInit {
         this.errorMessage = error.message || 'Failed to update profile';
         this.isLoading = false;
         console.error('Error updating profile:', error);
-      }
+      },
     });
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
+    Object.keys(formGroup.controls).forEach((key) => {
       const control = formGroup.get(key);
       control?.markAsTouched();
 
@@ -169,7 +173,7 @@ export class ProfileComponent implements OnInit {
       firstName: 'First name',
       lastName: 'Last name',
       phoneNumber: 'Phone number',
-      email: 'Email'
+      email: 'Email',
     };
     return labels[fieldName] || fieldName;
   }
@@ -192,9 +196,8 @@ export class ProfileComponent implements OnInit {
           // Even if logout API fails, clear local session
           console.error('Logout error:', error);
           // User is still redirected to login by AuthService.clearSession()
-        }
+        },
       });
     }
   }
 }
-

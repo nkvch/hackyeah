@@ -8,6 +8,8 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { AuthService } from '../../../core/services/auth.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-login',
@@ -20,15 +22,17 @@ import { AuthService } from '../../../core/services/auth.service';
     InputTextModule,
     PasswordModule,
     ButtonModule,
-    MessageModule
+    MessageModule,
+    LanguageSwitcherComponent,
   ],
   templateUrl: './login.html',
-  styleUrls: ['./login.scss']
+  styleUrls: ['./login.scss'],
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  public t = inject(TranslationService);
 
   loginForm: FormGroup;
   isLoading = false;
@@ -44,7 +48,7 @@ export class LoginComponent {
 
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required]]
+      password: ['', [Validators.required]],
     });
   }
 
@@ -68,7 +72,8 @@ export class LoginComponent {
         // Check if password change is required
         if (response.requiresPasswordChange) {
           // TODO: Redirect to password change page (Epic 1 - future story)
-          this.errorMessage = 'Your password has expired. Password change flow will be implemented in a future story.';
+          this.errorMessage =
+            'Your password has expired. Password change flow will be implemented in a future story.';
           this.successMessage = null;
           return;
         }
@@ -81,10 +86,10 @@ export class LoginComponent {
       error: (error) => {
         this.isLoading = false;
         this.errorMessage = error.message || 'Login failed. Please try again.';
-        
+
         // Clear password field on error
         this.loginForm.patchValue({ password: '' });
-      }
+      },
     });
   }
 

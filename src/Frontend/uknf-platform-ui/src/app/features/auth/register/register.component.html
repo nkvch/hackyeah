@@ -2,8 +2,11 @@
   <div class="auth-card">
     <!-- Header -->
     <div class="auth-header">
-      <h1 class="auth-title">UKNF Communication Platform</h1>
-      <p class="auth-subtitle">Create your account</p>
+      <div class="header-content">
+        <h1 class="auth-title">{{ t.translate('register.title') }}</h1>
+        <p class="auth-subtitle">{{ t.translate('register.subtitle') }}</p>
+      </div>
+      <app-language-switcher></app-language-switcher>
     </div>
 
     <!-- Success Message -->
@@ -25,12 +28,12 @@
         <!-- First Name -->
         <div class="form-group">
           <label for="firstName" class="form-label">
-            First Name <span class="required">*</span>
+            {{ t.translate('register.firstName') }} <span class="required">*</span>
           </label>
-          <input 
-            id="firstName" 
+          <input
+            id="firstName"
             type="text"
-            formControlName="firstName" 
+            formControlName="firstName"
             class="form-input"
             [class.error]="f['firstName'].invalid && f['firstName'].touched"
             placeholder="Enter your first name"
@@ -43,12 +46,12 @@
         <!-- Last Name -->
         <div class="form-group">
           <label for="lastName" class="form-label">
-            Last Name <span class="required">*</span>
+            {{ t.translate('register.lastName') }} <span class="required">*</span>
           </label>
-          <input 
-            id="lastName" 
+          <input
+            id="lastName"
             type="text"
-            formControlName="lastName" 
+            formControlName="lastName"
             class="form-input"
             [class.error]="f['lastName'].invalid && f['lastName'].touched"
             placeholder="Enter your last name"
@@ -62,12 +65,12 @@
       <!-- Email -->
       <div class="form-group">
         <label for="email" class="form-label">
-          Email <span class="required">*</span>
+          {{ t.translate('register.email') }} <span class="required">*</span>
         </label>
-        <input 
-          id="email" 
+        <input
+          id="email"
           type="email"
-          formControlName="email" 
+          formControlName="email"
           class="form-input"
           [class.error]="f['email'].invalid && f['email'].touched"
           placeholder="your.email@example.com"
@@ -80,12 +83,12 @@
       <!-- Phone -->
       <div class="form-group">
         <label for="phone" class="form-label">
-          Phone Number <span class="required">*</span>
+          {{ t.translate('register.phoneNumber') }} <span class="required">*</span>
         </label>
-        <input 
-          id="phone" 
+        <input
+          id="phone"
           type="tel"
-          formControlName="phone" 
+          formControlName="phone"
           class="form-input"
           [class.error]="f['phone'].invalid && f['phone'].touched"
           placeholder="+48123456789"
@@ -98,37 +101,33 @@
 
       <!-- PESEL -->
       <div class="form-group">
-        <label for="pesel" class="form-label">
-          PESEL <span class="required">*</span>
-        </label>
-        <input 
-          id="pesel" 
+        <label for="pesel" class="form-label"> PESEL <span class="required">*</span> </label>
+        <input
+          id="pesel"
           type="text"
-          formControlName="pesel" 
+          formControlName="pesel"
           class="form-input"
           [class.error]="f['pesel'].invalid && f['pesel'].touched"
           placeholder="12345678901"
           maxlength="11"
         />
-        <span class="help-text" *ngIf="peselDisplay">
-          Display: {{ peselDisplay }}
-        </span>
+        <span class="help-text" *ngIf="peselDisplay"> Display: {{ peselDisplay }} </span>
         <span *ngIf="f['pesel'].invalid && f['pesel'].touched" class="error-message">
           {{ getErrorMessage('pesel') }}
         </span>
       </div>
 
       <!-- Submit Button -->
-      <button 
-        type="submit" 
+      <button
+        type="submit"
         class="btn btn-primary btn-submit"
         [disabled]="registerForm.invalid || loading"
       >
         <span *ngIf="!loading">
-          <span class="icon">👤</span> Register
+          <span class="icon">👤</span> {{ t.translate('register.registerButton') }}
         </span>
         <span *ngIf="loading">
-          <span class="spinner-small"></span> Creating account...
+          <span class="spinner-small"></span> {{ t.translate('register.registering') }}
         </span>
       </button>
     </form>
@@ -136,8 +135,8 @@
     <!-- Footer Links -->
     <div class="auth-footer">
       <p class="footer-text">
-        Already have an account?
-        <a routerLink="/login" class="link">Login here</a>
+        {{ t.translate('register.alreadyHaveAccount') }}
+        <a routerLink="/login" class="link">{{ t.translate('register.login') }}</a>
       </p>
     </div>
   </div>

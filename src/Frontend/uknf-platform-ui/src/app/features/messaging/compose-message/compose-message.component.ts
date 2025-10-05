@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MessagesService } from '../../../core/services/messages.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { TranslationService } from '../../../core/services/translation.service';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 import { ALLOWED_FILE_EXTENSIONS, MAX_TOTAL_SIZE } from '../../../core/models/message.model';
 
 /**
@@ -13,7 +15,7 @@ import { ALLOWED_FILE_EXTENSIONS, MAX_TOTAL_SIZE } from '../../../core/models/me
 @Component({
   selector: 'app-compose-message',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, LanguageSwitcherComponent],
   templateUrl: './compose-message.component.html',
   styleUrls: ['./compose-message.component.scss'],
 })
@@ -42,6 +44,7 @@ export class ComposeMessageComponent implements OnInit {
     private messagesService: MessagesService,
     private authService: AuthService,
     private router: Router,
+    public t: TranslationService,
   ) {}
 
   ngOnInit(): void {

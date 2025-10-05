@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { MessagesService } from '../../../core/services/messages.service';
 import { MessageDetail } from '../../../core/models/message.model';
+import { TranslationService } from '../../../core/services/translation.service';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 /**
  * Message detail component
@@ -13,7 +15,7 @@ import { MessageDetail } from '../../../core/models/message.model';
 @Component({
   selector: 'app-message-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, LanguageSwitcherComponent],
   templateUrl: './message-detail.component.html',
   styleUrl: './message-detail.component.scss',
 })
@@ -34,6 +36,7 @@ export class MessageDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private messagesService: MessagesService,
+    public t: TranslationService,
   ) {}
 
   ngOnInit(): void {

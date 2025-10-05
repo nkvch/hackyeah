@@ -9,6 +9,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AuthService } from '../../../core/services/auth.service';
 import { PasswordPolicy } from '../../../core/models/password.model';
 import { PasswordStrengthComponent } from '../../../shared/components/password-strength/password-strength.component';
+import { TranslationService } from '../../../core/services/translation.service';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 /**
  * Component for setting initial password after account activation
@@ -24,16 +26,18 @@ import { PasswordStrengthComponent } from '../../../shared/components/password-s
     InputTextModule,
     MessageModule,
     ProgressSpinnerModule,
-    PasswordStrengthComponent
+    PasswordStrengthComponent,
+    LanguageSwitcherComponent,
   ],
   templateUrl: './set-password.component.html',
-  styleUrls: ['./set-password.component.scss']
+  styleUrls: ['./set-password.component.scss'],
 })
 export class SetPasswordComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  public t = inject(TranslationService);
 
   setPasswordForm!: FormGroup;
   token: string = '';
@@ -48,10 +52,10 @@ export class SetPasswordComponent implements OnInit {
   ngOnInit(): void {
     // Initialize form first to prevent errors
     this.initializeForm();
-    
+
     // Extract token from query parameters
     this.token = this.route.snapshot.queryParamMap.get('token') || '';
-    
+
     if (!this.token) {
       this.errorMessage = 'Invalid activation link. Please request a new one.';
       return;
@@ -69,17 +73,20 @@ export class SetPasswordComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load password policy:', error);
         // Continue anyway with default validation
-      }
+      },
     });
   }
 
   private initializeForm(): void {
-    this.setPasswordForm = this.fb.group({
-      password: ['', [Validators.required, Validators.minLength(8)]],
-      passwordConfirmation: ['', [Validators.required]]
-    }, {
-      validators: this.passwordsMatchValidator
-    });
+    this.setPasswordForm = this.fb.group(
+      {
+        password: ['', [Validators.required, Validators.minLength(8)]],
+        passwordConfirmation: ['', [Validators.required]],
+      },
+      {
+        validators: this.passwordsMatchValidator,
+      },
+    );
   }
 
   private passwordsMatchValidator(group: FormGroup): { [key: string]: boolean } | null {
@@ -109,7 +116,7 @@ export class SetPasswordComponent implements OnInit {
       hasUppercase: !this.passwordPolicy.requireUppercase || /[A-Z]/.test(pwd),
       hasLowercase: !this.passwordPolicy.requireLowercase || /[a-z]/.test(pwd),
       hasDigit: !this.passwordPolicy.requireDigit || /[0-9]/.test(pwd),
-      hasSpecialChar: !this.passwordPolicy.requireSpecialChar || /[^A-Za-z0-9]/.test(pwd)
+      hasSpecialChar: !this.passwordPolicy.requireSpecialChar || /[^A-Za-z0-9]/.test(pwd),
     };
   }
 
@@ -141,7 +148,7 @@ export class SetPasswordComponent implements OnInit {
       error: (error) => {
         this.errorMessage = error.message || 'Failed to set password. Please try again.';
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -156,9 +163,8 @@ export class SetPasswordComponent implements OnInit {
   }
 
   private markFormAsTouched(): void {
-    Object.keys(this.setPasswordForm.controls).forEach(key => {
+    Object.keys(this.setPasswordForm.controls).forEach((key) => {
       this.setPasswordForm.get(key)?.markAsTouched();
     });
   }
 }
-
