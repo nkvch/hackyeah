@@ -1,0 +1,83 @@
+# Quality Gate Decision - Story 1.4: User Login (Authentication)
+# Reviewed: 2025-10-05 by Quinn (Test Architect)
+
+schema: 1
+story: '1.4'
+story_title: 'User Login (Authentication)'
+gate: CONCERNS
+status_reason: 'Solid implementation and strong tests; minor gaps remain: missing 429 rate-limit test and audit IP/UserAgent placeholders.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2025-10-05T00:00:00Z'
+
+top_issues:
+  - id: RL-1
+    title: 'No automated test for login rate limiting (429)'
+    severity: medium
+    suggested_owner: dev
+    recommendation: 'Add integration test: exceed 5 attempts within 15 minutes → 429'
+  - id: AUD-1
+    title: 'Audit logs lack IP/UserAgent details'
+    severity: medium
+    suggested_owner: dev
+    recommendation: 'Populate from HTTP context via middleware/accessor; keep generic if unavailable'
+
+waiver:
+  active: false
+
+quality_score: 88
+expires: '2025-10-19T00:00:00Z'
+
+evidence:
+  tests_reviewed:
+    count: 29
+    breakdown:
+      unit_tests:
+        LoginCommandHandler: 6
+        JwtTokenService: 10
+      integration_tests:
+        LoginFlow: 13
+  trace:
+    ac_covered: [1,2,3,4,5,6,7]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: |
+      ✅ JWT with strict validation; BCrypt password verification; generic errors; refresh token revocation; login rate limiter configured.
+      ⚠️ Missing automated 429 test; audit IP/UserAgent placeholders reduce visibility.
+  performance:
+    status: PASS
+    notes: 'Auth flow efficient; rate limiting prevents abuse.'
+  reliability:
+    status: PASS
+    notes: 'Clear error mapping; integration tests cover critical paths.'
+  maintainability:
+    status: PASS
+    notes: 'Clean Architecture; well-structured tests; clear settings.'
+
+recommendations:
+  immediate:
+    - action: 'Add integration test for 429 on login rate limit'
+      refs: ['Tests.Integration/Api/Auth/LoginIntegrationTests.cs']
+    - action: 'Populate IP/UserAgent in audit logs from HTTP context'
+      refs: ['LoginCommandHandler.cs']
+  future:
+    - action: 'Consider refresh token rotation on refresh'
+      refs: ['JwtTokenService.cs']
+    - action: 'Add device/session metadata to refresh tokens for audit clarity'
+      refs: ['RefreshToken.cs']
+
+summary:
+  review_outcome: PASS_WITH_CONCERNS
+  confidence_level: HIGH
+  key_strengths:
+    - 'Comprehensive tests for login, token, and audit flows'
+    - 'Secure JWT implementation with strict validation'
+    - 'Rate limiting configured (5/15 min)'
+  minor_concerns:
+    - 'Missing 429 rate-limit test'
+    - 'Audit logs missing IP/UserAgent data'
+
+
+

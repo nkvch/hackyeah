@@ -10,7 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="3.9.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -24,6 +28,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Api\UknfPlatform.Api\UknfPlatform.Api.csproj" />
+    <ProjectReference Include="..\..\Application\UknfPlatform.Application.Auth\UknfPlatform.Application.Auth.csproj" />
+    <ProjectReference Include="..\..\Domain\UknfPlatform.Domain.Auth\UknfPlatform.Domain.Auth.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\UknfPlatform.Infrastructure.Persistence\UknfPlatform.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\UknfPlatform.Infrastructure.Identity\UknfPlatform.Infrastructure.Identity.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,73 @@
+// Color Palette
+$primary-color: #282878;
+$primary-light: #3d3d9a;
+$primary-dark: #1d1d5a;
+$secondary-color: #4a4aaf;
+
+// Gradient
+$gradient-primary: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+
+// Neutral Colors
+$white: #ffffff;
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$gray-900: #111827;
+
+// Status Colors
+$success-bg: #d1fae5;
+$success-border: #6ee7b7;
+$success-text: #065f46;
+
+$error-bg: #fee2e2;
+$error-border: #fca5a5;
+$error-text: #991b1b;
+
+$warning-bg: #fef3c7;
+$warning-border: #f59e0b;
+$warning-text: #92400e;
+
+$info-bg: #dbeafe;
+$info-border: #93c5fd;
+$info-text: #1e40af;
+
+// Spacing
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+$spacing-2xl: 2.5rem;
+$spacing-3xl: 3rem;
+
+// Border Radius
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-full: 9999px;
+
+// Shadows
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+$shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+
+// Transitions
+$transition-fast: 0.15s ease;
+$transition-base: 0.2s ease;
+$transition-slow: 0.3s ease;
+
+// Breakpoints
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+

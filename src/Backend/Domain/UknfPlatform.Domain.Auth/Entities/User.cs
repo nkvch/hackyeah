@@ -15,6 +15,8 @@ public class User : BaseEntity
     public string PeselEncrypted { get; private set; } = string.Empty;
     public string PeselLast4 { get; private set; } = string.Empty;
     public string? PasswordHash { get; private set; }
+    public DateTime? LastPasswordChangeDate { get; private set; }
+    public string? PendingEmail { get; private set; } // Email awaiting confirmation
     public UserType UserType { get; private set; }
     public bool IsActive { get; private set; }
     public bool MustChangePassword { get; private set; }
@@ -59,6 +61,8 @@ public class User : BaseEntity
             throw new ArgumentException("Password hash cannot be empty", nameof(passwordHash));
 
         PasswordHash = passwordHash;
+        LastPasswordChangeDate = DateTime.UtcNow;
+        MustChangePassword = false; // Clear password change requirement
         UpdateTimestamp();
     }
 
@@ -113,6 +117,41 @@ public class User : BaseEntity
     public void RequirePasswordChange()
     {
         MustChangePassword = true;
+        UpdateTimestamp();
+    }
+
+    /// <summary>
+    /// Requests an email change by setting the pending email
+    /// The change won't take effect until confirmed
+    /// </summary>
+    public void RequestEmailChange(string newEmail)
+    {
+        if (string.IsNullOrWhiteSpace(newEmail))
+            throw new ArgumentException("Email cannot be empty", nameof(newEmail));
+
+        PendingEmail = newEmail.ToLowerInvariant();
+        UpdateTimestamp();
+    }
+
+    /// <summary>
+    /// Confirms the email change and applies the pending email
+    /// </summary>
+    public void ConfirmEmailChange()
+    {
+        if (string.IsNullOrWhiteSpace(PendingEmail))
+            throw new InvalidOperationException("No pending email change to confirm");
+
+        Email = PendingEmail;
+        PendingEmail = null;
+        UpdateTimestamp();
+    }
+
+    /// <summary>
+    /// Cancels a pending email change
+    /// </summary>
+    public void CancelEmailChange()
+    {
+        PendingEmail = null;
         UpdateTimestamp();
     }
 

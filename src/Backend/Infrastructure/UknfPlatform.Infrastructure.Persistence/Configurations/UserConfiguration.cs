@@ -45,6 +45,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.PasswordHash)
             .HasMaxLength(500);
 
+        builder.Property(u => u.PendingEmail)
+            .HasMaxLength(256);
+
         builder.Property(u => u.UserType)
             .IsRequired()
             .HasConversion<string>()
@@ -57,6 +60,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
 
         builder.Property(u => u.LastLoginDate);
+
+        builder.Property(u => u.LastPasswordChangeDate);
 
         builder.Property(u => u.CreatedDate)
             .IsRequired();

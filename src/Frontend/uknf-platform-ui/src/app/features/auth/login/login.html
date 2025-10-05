@@ -1,0 +1,102 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Header -->
+    <div class="auth-header">
+      <h1 class="auth-title">UKNF Communication Platform</h1>
+      <p class="auth-subtitle">Sign in to your account</p>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <span class="icon">✅</span>
+      {{ successMessage }}
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      <span class="icon">⚠️</span>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Login Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="email" class="form-label">
+          Email <span class="required">*</span>
+        </label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="form-input"
+          [class.error]="email?.invalid && (email?.dirty || email?.touched)"
+          placeholder="your.email@example.com"
+        />
+        <span *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
+          <span *ngIf="email?.errors?.['required']">Email is required</span>
+          <span *ngIf="email?.errors?.['email']">Invalid email format</span>
+        </span>
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password" class="form-label">
+          Password <span class="required">*</span>
+        </label>
+        <div class="password-wrapper">
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            class="form-input"
+            [class.error]="password?.invalid && (password?.dirty || password?.touched)"
+            placeholder="Enter your password"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="showPassword = !showPassword"
+            tabindex="-1"
+          >
+            {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+          </button>
+        </div>
+        <span *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="error-message">
+          Password is required
+        </span>
+      </div>
+
+      <!-- Forgot Password Link -->
+      <div class="forgot-password">
+        <a class="link disabled">Forgot password? (Coming soon)</a>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn btn-primary btn-submit"
+        [disabled]="loginForm.invalid || isLoading"
+      >
+        <span *ngIf="!isLoading">
+          <span class="icon">🔐</span> Sign In
+        </span>
+        <span *ngIf="isLoading">
+          <span class="spinner-small"></span> Signing in...
+        </span>
+      </button>
+    </form>
+
+    <!-- Footer Links -->
+    <div class="auth-footer">
+      <p class="footer-text">
+        Don't have an account?
+        <a routerLink="/register" class="link">Register here</a>
+      </p>
+      <p class="footer-text">
+        Didn't receive activation email?
+        <a routerLink="/resend-activation" class="link">Resend activation</a>
+      </p>
+    </div>
+  </div>
+</div>

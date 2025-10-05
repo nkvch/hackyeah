@@ -1,0 +1,106 @@
+using FluentAssertions;
+using MassTransit;
+using MassTransit.Testing;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
+using UknfPlatform.Application.Communication.Reports.Events;
+using UknfPlatform.Domain.Communication.Entities;
+using UknfPlatform.Domain.Communication.Events;
+using UknfPlatform.Domain.Communication.Enums;
+using UknfPlatform.Domain.Communication.Interfaces;
+using Xunit;
+
+namespace UknfPlatform.UnitTests.IntegrationTests;
+
+public class ReportSubmittedEventToQueueTests
+{
+    [Fact]
+    public async Task Publishing_ReportSubmittedEvent_ShouldPublish_ReportValidationJob_And_Update_Report_Status()
+    {
+        // Arrange DI container
+        var services = new ServiceCollection();
+
+        services.AddLogging(logging => logging.AddConsole());
+
+        // MediatR - register handlers from Application.Communication assembly
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(ReportSubmittedEventHandler).Assembly);
+        });
+
+        // MassTransit Test Harness (InMemory)
+        services.AddMassTransitTestHarness();
+
+        // Mock repository
+        var reportRepositoryMock = new Mock<IReportRepository>();
+
+        // Create a report in Working status
+        var report = Report.Create(
+            entityId: 1001,
+            userId: Guid.NewGuid(),
+            fileName: "report.xlsx",
+            fileStorageKey: "storage/key",
+            fileSize: 2048,
+            reportType: "Quarterly",
+            reportingPeriod: "Q1_2025");
+
+        reportRepositoryMock
+            .Setup(r => r.GetByIdAsync(report.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(report);
+
+        // Allow Update & SaveChanges
+        reportRepositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<Report>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        reportRepositoryMock
+            .Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        services.AddSingleton<IReportRepository>(reportRepositoryMock.Object);
+
+        await using var provider = services.BuildServiceProvider(true);
+
+        var harness = provider.GetRequiredService<ITestHarness>();
+        await harness.Start();
+
+        try
+        {
+            var mediator = provider.GetRequiredService<IMediator>();
+
+            var evt = new ReportSubmittedEvent
+            {
+                ReportId = report.Id,
+                EntityId = 1001,
+                UserId = Guid.NewGuid(),
+                FileName = report.FileName,
+                FileStorageKey = report.FileStorageKey,
+                ReportType = report.ReportType,
+                ReportingPeriod = report.ReportingPeriod,
+                SubmittedDate = report.SubmittedDate
+            };
+
+            // Act: Publish domain event via MediatR
+            await mediator.Publish(evt);
+
+            // Assert: A ReportValidationJob was published
+            (await harness.Published.Any<UknfPlatform.Domain.Communication.Messages.ReportValidationJob>())
+                .Should().BeTrue("the handler should publish a validation job to the bus");
+
+            // Assert: Report moved to Transmitted and received a validation ID
+            report.ValidationStatus.Should().Be(ValidationStatus.Transmitted);
+            report.UniqueValidationId.Should().NotBeNullOrWhiteSpace();
+
+            // Verify persistence was attempted
+            reportRepositoryMock.Verify(r => r.UpdateAsync(report, It.IsAny<CancellationToken>()), Times.Once);
+            reportRepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            await harness.Stop();
+        }
+    }
+}
+

@@ -1,140 +1,144 @@
-<div class="flex min-h-screen items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="w-full max-w-md">
-    <div class="text-center mb-8">
-      <h2 class="text-3xl font-bold text-gray-900">UKNF Communication Platform</h2>
-      <p class="mt-2 text-sm text-gray-600">Create your account</p>
+<div class="auth-container">
+  <div class="auth-card">
+    <!-- Header -->
+    <div class="auth-header">
+      <h1 class="auth-title">UKNF Communication Platform</h1>
+      <p class="auth-subtitle">Create your account</p>
     </div>
 
-    <p-card>
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
-        <!-- Success Message -->
-        <p-message 
-          *ngIf="successMessage" 
-          severity="success" 
-          [text]="successMessage"
-          styleClass="w-full">
-        </p-message>
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <span class="icon">✅</span>
+      {{ successMessage }}
+    </div>
 
-        <!-- Error Message -->
-        <p-message 
-          *ngIf="errorMessage" 
-          severity="error" 
-          [text]="errorMessage"
-          styleClass="w-full">
-        </p-message>
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      <span class="icon">⚠️</span>
+      {{ errorMessage }}
+    </div>
 
+    <!-- Registration Form -->
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <!-- Name Row -->
+      <div class="form-row">
         <!-- First Name -->
-        <div class="flex flex-col gap-2">
-          <label for="firstName" class="font-semibold">First Name <span class="text-red-500">*</span></label>
+        <div class="form-group">
+          <label for="firstName" class="form-label">
+            First Name <span class="required">*</span>
+          </label>
           <input 
-            pInputText 
             id="firstName" 
+            type="text"
             formControlName="firstName" 
+            class="form-input"
+            [class.error]="f['firstName'].invalid && f['firstName'].touched"
             placeholder="Enter your first name"
-            [class.ng-invalid]="f['firstName'].invalid && f['firstName'].touched"
-            class="w-full" />
-          <small 
-            *ngIf="f['firstName'].invalid && f['firstName'].touched" 
-            class="text-red-500">
+          />
+          <span *ngIf="f['firstName'].invalid && f['firstName'].touched" class="error-message">
             {{ getErrorMessage('firstName') }}
-          </small>
+          </span>
         </div>
 
         <!-- Last Name -->
-        <div class="flex flex-col gap-2">
-          <label for="lastName" class="font-semibold">Last Name <span class="text-red-500">*</span></label>
+        <div class="form-group">
+          <label for="lastName" class="form-label">
+            Last Name <span class="required">*</span>
+          </label>
           <input 
-            pInputText 
             id="lastName" 
-            formControlName="lastName" 
-            placeholder="Enter your last name"
-            [class.ng-invalid]="f['lastName'].invalid && f['lastName'].touched"
-            class="w-full" />
-          <small 
-            *ngIf="f['lastName'].invalid && f['lastName'].touched" 
-            class="text-red-500">
-            {{ getErrorMessage('lastName') }}
-          </small>
-        </div>
-
-        <!-- Email -->
-        <div class="flex flex-col gap-2">
-          <label for="email" class="font-semibold">Email <span class="text-red-500">*</span></label>
-          <input 
-            pInputText 
-            id="email" 
-            type="email"
-            formControlName="email" 
-            placeholder="your.email@example.com"
-            [class.ng-invalid]="f['email'].invalid && f['email'].touched"
-            class="w-full" />
-          <small 
-            *ngIf="f['email'].invalid && f['email'].touched" 
-            class="text-red-500">
-            {{ getErrorMessage('email') }}
-          </small>
-        </div>
-
-        <!-- Phone -->
-        <div class="flex flex-col gap-2">
-          <label for="phone" class="font-semibold">Phone Number <span class="text-red-500">*</span></label>
-          <input 
-            pInputText 
-            id="phone" 
-            type="tel"
-            formControlName="phone" 
-            placeholder="+48123456789"
-            [class.ng-invalid]="f['phone'].invalid && f['phone'].touched"
-            class="w-full" />
-          <small 
-            *ngIf="f['phone'].invalid && f['phone'].touched" 
-            class="text-red-500">
-            {{ getErrorMessage('phone') }}
-          </small>
-        </div>
-
-        <!-- PESEL (Masked) -->
-        <div class="flex flex-col gap-2">
-          <label for="pesel" class="font-semibold">PESEL <span class="text-red-500">*</span></label>
-          <input 
-            pInputText 
-            id="pesel" 
             type="text"
-            formControlName="pesel" 
-            placeholder="12345678901"
-            maxlength="11"
-            [class.ng-invalid]="f['pesel'].invalid && f['pesel'].touched"
-            class="w-full" />
-          <small class="text-gray-500" *ngIf="peselDisplay">
-            Display: {{ peselDisplay }}
-          </small>
-          <small 
-            *ngIf="f['pesel'].invalid && f['pesel'].touched" 
-            class="text-red-500">
-            {{ getErrorMessage('pesel') }}
-          </small>
+            formControlName="lastName" 
+            class="form-input"
+            [class.error]="f['lastName'].invalid && f['lastName'].touched"
+            placeholder="Enter your last name"
+          />
+          <span *ngIf="f['lastName'].invalid && f['lastName'].touched" class="error-message">
+            {{ getErrorMessage('lastName') }}
+          </span>
         </div>
+      </div>
 
-        <!-- Submit Button -->
-        <div class="flex flex-col gap-4">
-          <p-button 
-            type="submit" 
-            label="Register" 
-            icon="pi pi-user-plus"
-            [loading]="loading"
-            [disabled]="loading"
-            styleClass="w-full">
-          </p-button>
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email" class="form-label">
+          Email <span class="required">*</span>
+        </label>
+        <input 
+          id="email" 
+          type="email"
+          formControlName="email" 
+          class="form-input"
+          [class.error]="f['email'].invalid && f['email'].touched"
+          placeholder="your.email@example.com"
+        />
+        <span *ngIf="f['email'].invalid && f['email'].touched" class="error-message">
+          {{ getErrorMessage('email') }}
+        </span>
+      </div>
 
-          <div class="text-center">
-            <span class="text-sm text-gray-600">Already have an account? </span>
-            <a routerLink="/auth/login" class="text-sm text-blue-600 hover:text-blue-800 font-semibold">
-              Login here
-            </a>
-          </div>
-        </div>
-      </form>
-    </p-card>
+      <!-- Phone -->
+      <div class="form-group">
+        <label for="phone" class="form-label">
+          Phone Number <span class="required">*</span>
+        </label>
+        <input 
+          id="phone" 
+          type="tel"
+          formControlName="phone" 
+          class="form-input"
+          [class.error]="f['phone'].invalid && f['phone'].touched"
+          placeholder="+48123456789"
+        />
+        <span class="help-text">International format with country code</span>
+        <span *ngIf="f['phone'].invalid && f['phone'].touched" class="error-message">
+          {{ getErrorMessage('phone') }}
+        </span>
+      </div>
+
+      <!-- PESEL -->
+      <div class="form-group">
+        <label for="pesel" class="form-label">
+          PESEL <span class="required">*</span>
+        </label>
+        <input 
+          id="pesel" 
+          type="text"
+          formControlName="pesel" 
+          class="form-input"
+          [class.error]="f['pesel'].invalid && f['pesel'].touched"
+          placeholder="12345678901"
+          maxlength="11"
+        />
+        <span class="help-text" *ngIf="peselDisplay">
+          Display: {{ peselDisplay }}
+        </span>
+        <span *ngIf="f['pesel'].invalid && f['pesel'].touched" class="error-message">
+          {{ getErrorMessage('pesel') }}
+        </span>
+      </div>
+
+      <!-- Submit Button -->
+      <button 
+        type="submit" 
+        class="btn btn-primary btn-submit"
+        [disabled]="registerForm.invalid || loading"
+      >
+        <span *ngIf="!loading">
+          <span class="icon">👤</span> Register
+        </span>
+        <span *ngIf="loading">
+          <span class="spinner-small"></span> Creating account...
+        </span>
+      </button>
+    </form>
+
+    <!-- Footer Links -->
+    <div class="auth-footer">
+      <p class="footer-text">
+        Already have an account?
+        <a routerLink="/login" class="link">Login here</a>
+      </p>
+    </div>
   </div>
 </div>
-

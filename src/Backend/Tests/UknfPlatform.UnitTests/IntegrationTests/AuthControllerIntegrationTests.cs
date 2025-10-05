@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using UknfPlatform.Application.Auth.Authentication.Commands;
+using UknfPlatform.Domain.Auth.Entities;
 using UknfPlatform.Infrastructure.Persistence.Contexts;
 
 namespace UknfPlatform.UnitTests.IntegrationTests;
@@ -28,6 +29,8 @@ public class AuthControllerIntegrationTests : IClassFixture<WebApplicationFactor
         // Clean database before each test
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.PasswordHistories.RemoveRange(db.PasswordHistories); // Added for Story 1.3
+        db.ActivationTokens.RemoveRange(db.ActivationTokens); // Added for Story 1.2
         db.Users.RemoveRange(db.Users);
         db.SaveChanges();
         return Task.CompletedTask;
@@ -327,6 +330,712 @@ public class AuthControllerIntegrationTests : IClassFixture<WebApplicationFactor
         user.PeselEncrypted.Should().NotBe(command.Pesel);
         user.PeselEncrypted.Should().NotBeNullOrEmpty();
         user.PeselLast4.Should().Be("8901");
+    }
+
+    // ============================================================================
+    // ACTIVATION FLOW TESTS (Story 1.2)
+    // ============================================================================
+
+    [Fact]
+    public async Task POST_Register_CreatesActivationTokenInDatabase()
+    {
+        // Arrange
+        var command = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/register", command);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        // Verify activation token was created
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var user = await db.Users.FirstAsync(u => u.Email == command.Email.ToLowerInvariant());
+        var activationToken = await db.ActivationTokens.FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+        activationToken.Should().NotBeNull();
+        activationToken!.Token.Should().NotBeNullOrEmpty();
+        activationToken.Token.Length.Should().BeGreaterThan(32); // Cryptographically secure token
+        activationToken.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
+        activationToken.ExpiresAt.Should().BeBefore(DateTime.UtcNow.AddHours(25)); // ~24 hours
+        activationToken.IsUsed.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GET_Activate_WithValidToken_Returns200AndActivatesUser()
+    {
+        // Arrange - Register user first
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        // Get the activation token from database
+        string activationToken;
+        Guid userId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            activationToken = token.Token;
+            userId = user.Id;
+        }
+
+        // Act
+        var response = await _client.GetAsync($"/api/auth/activate?token={activationToken}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        
+        var result = await response.Content.ReadFromJsonAsync<ActivateAccountResponse>();
+        result.Should().NotBeNull();
+        result!.UserId.Should().Be(userId);
+        result.Message.Should().Contain("activated successfully");
+
+        // Verify user is now active in database
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FindAsync(userId);
+            var token = await db.ActivationTokens.FirstAsync(t => t.Token == activationToken);
+
+            user.Should().NotBeNull();
+            user!.IsActive.Should().BeTrue();
+            token.IsUsed.Should().BeTrue(); // Token should be marked as used
+        }
+    }
+
+    [Fact]
+    public async Task GET_Activate_WithInvalidToken_Returns400()
+    {
+        // Arrange
+        var invalidToken = "this-token-does-not-exist";
+
+        // Act
+        var response = await _client.GetAsync($"/api/auth/activate?token={invalidToken}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        
+        var errorContent = await response.Content.ReadAsStringAsync();
+        errorContent.Should().Contain("invalid");
+    }
+
+    [Fact]
+    public async Task GET_Activate_WithExpiredToken_Returns400()
+    {
+        // Arrange - Register user and manually expire their token
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string expiredToken;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            
+            // Manually set token as expired using reflection
+            var expiresAtProperty = token.GetType().GetProperty("ExpiresAt");
+            expiresAtProperty!.SetValue(token, DateTime.UtcNow.AddHours(-1));
+            await db.SaveChangesAsync();
+            
+            expiredToken = token.Token;
+        }
+
+        // Act
+        var response = await _client.GetAsync($"/api/auth/activate?token={expiredToken}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        
+        var errorContent = await response.Content.ReadAsStringAsync();
+        errorContent.Should().Contain("expired");
+    }
+
+    [Fact]
+    public async Task GET_Activate_WithUsedToken_Returns400()
+    {
+        // Arrange - Register and activate user first
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string activationToken;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            activationToken = token.Token;
+        }
+
+        // Activate once (should succeed)
+        var firstResponse = await _client.GetAsync($"/api/auth/activate?token={activationToken}");
+        firstResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Act - Try to activate again with same token
+        var secondResponse = await _client.GetAsync($"/api/auth/activate?token={activationToken}");
+
+        // Assert
+        secondResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        
+        var errorContent = await secondResponse.Content.ReadAsStringAsync();
+        errorContent.Should().Contain("already been activated");
+    }
+
+    [Fact]
+    public async Task GET_Activate_WithAlreadyActiveUser_ReturnsSuccessIdempotently()
+    {
+        // Arrange - Register user
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string activationToken;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            activationToken = token.Token;
+        }
+
+        // Activate user
+        var firstResponse = await _client.GetAsync($"/api/auth/activate?token={activationToken}");
+        firstResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Act - Try again (idempotent behavior - though token is used, this tests the user.IsActive check)
+        var secondResponse = await _client.GetAsync($"/api/auth/activate?token={activationToken}");
+
+        // Assert - Should return 400 with "already activated" message (token is already used)
+        secondResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var errorContent = await secondResponse.Content.ReadAsStringAsync();
+        errorContent.Should().Contain("already been activated");
+    }
+
+    [Fact]
+    public async Task POST_ResendActivation_WithValidEmail_Returns200()
+    {
+        // Arrange - Register user first
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        var resendCommand = new ResendActivationCommand(registerCommand.Email);
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/resend-activation", resendCommand);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        
+        var result = await response.Content.ReadFromJsonAsync<ResendActivationResponse>();
+        result.Should().NotBeNull();
+        result!.Message.Should().Contain("activation link");
+
+        // Verify old token is invalidated and new token is created
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+        var tokens = await db.ActivationTokens.Where(t => t.UserId == user.Id).ToListAsync();
+
+        tokens.Should().HaveCountGreaterThan(1); // At least 2 tokens (old + new)
+        tokens.Count(t => t.IsUsed).Should().BeGreaterThan(0); // Old token(s) marked as used
+        tokens.Count(t => !t.IsUsed && t.ExpiresAt > DateTime.UtcNow).Should().Be(1); // Exactly one valid new token
+    }
+
+    [Fact]
+    public async Task POST_ResendActivation_WithNonExistentEmail_Returns200WithGenericMessage()
+    {
+        // Arrange
+        var resendCommand = new ResendActivationCommand("nonexistent@example.com");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/resend-activation", resendCommand);
+
+        // Assert
+        // Should return success even for non-existent email (security - don't reveal user existence)
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        
+        var result = await response.Content.ReadFromJsonAsync<ResendActivationResponse>();
+        result.Should().NotBeNull();
+        result!.Message.Should().Contain("activation link");
+    }
+
+    // ============================================================================
+    // PASSWORD SETTING FLOW TESTS (Story 1.3)
+    // ============================================================================
+
+    [Fact]
+    public async Task POST_SetPassword_WithValidTokenAndPassword_Returns200()
+    {
+        // Arrange - Register and get activation token
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string activationToken;
+        Guid userId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            activationToken = token.Token;
+            userId = user.Id;
+        }
+
+        var setPasswordCommand = new
+        {
+            Token = activationToken,
+            Password = "MyP@ssw0rd!",
+            PasswordConfirmation = "MyP@ssw0rd!"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/set-password", setPasswordCommand);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var result = await response.Content.ReadFromJsonAsync<SetPasswordResponse>();
+        result.Should().NotBeNull();
+        result!.UserId.Should().Be(userId);
+        result.Message.Should().Contain("Password set successfully");
+
+        // Verify password is hashed in database (not plaintext)
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FindAsync(userId);
+            
+            user.Should().NotBeNull();
+            user!.PasswordHash.Should().NotBeNullOrEmpty();
+            user.PasswordHash.Should().StartWith("$2"); // BCrypt hash format
+            user.PasswordHash.Should().NotBe("MyP@ssw0rd!", "password should be hashed, not plaintext");
+        }
+    }
+
+    [Fact]
+    public async Task POST_SetPassword_PasswordHashedInDatabase_NotPlaintext()
+    {
+        // Arrange
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string activationToken;
+        Guid userId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            activationToken = token.Token;
+            userId = user.Id;
+        }
+
+        var password = "TestPassword123!";
+        var setPasswordCommand = new
+        {
+            Token = activationToken,
+            Password = password,
+            PasswordConfirmation = password
+        };
+
+        // Act
+        await _client.PostAsJsonAsync("/api/auth/set-password", setPasswordCommand);
+
+        // Assert - Verify hash format and not plaintext
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FindAsync(userId);
+
+            user!.PasswordHash.Should().NotBe(password, "password should not be stored in plaintext");
+            user.PasswordHash.Should().StartWith("$2", "BCrypt hash should start with $2a$ or $2b$");
+            user.PasswordHash.Length.Should().Be(60, "BCrypt hash should be exactly 60 characters");
+        }
+    }
+
+    [Fact]
+    public async Task POST_SetPassword_SetsUserIsActiveToTrue()
+    {
+        // Arrange
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string activationToken;
+        Guid userId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            user.IsActive.Should().BeFalse("user should not be active before setting password");
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            activationToken = token.Token;
+            userId = user.Id;
+        }
+
+        var setPasswordCommand = new
+        {
+            Token = activationToken,
+            Password = "MyP@ssw0rd!",
+            PasswordConfirmation = "MyP@ssw0rd!"
+        };
+
+        // Act
+        await _client.PostAsJsonAsync("/api/auth/set-password", setPasswordCommand);
+
+        // Assert
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FindAsync(userId);
+            user!.IsActive.Should().BeTrue("user should be active after setting password");
+        }
+    }
+
+    [Fact]
+    public async Task POST_SetPassword_UpdatesLastPasswordChangeDate()
+    {
+        // Arrange
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string activationToken;
+        Guid userId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            activationToken = token.Token;
+            userId = user.Id;
+        }
+
+        var setPasswordCommand = new
+        {
+            Token = activationToken,
+            Password = "MyP@ssw0rd!",
+            PasswordConfirmation = "MyP@ssw0rd!"
+        };
+
+        var beforeSetPassword = DateTime.UtcNow;
+
+        // Act
+        await _client.PostAsJsonAsync("/api/auth/set-password", setPasswordCommand);
+
+        // Assert
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FindAsync(userId);
+            
+            user!.LastPasswordChangeDate.Should().NotBeNull();
+            user.LastPasswordChangeDate.Should().BeAfter(beforeSetPassword.AddSeconds(-5));
+            user.LastPasswordChangeDate.Should().BeBefore(DateTime.UtcNow.AddSeconds(5));
+        }
+    }
+
+    [Fact]
+    public async Task POST_SetPassword_CreatesPasswordHistoryEntry()
+    {
+        // Arrange
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string activationToken;
+        Guid userId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            activationToken = token.Token;
+            userId = user.Id;
+        }
+
+        var setPasswordCommand = new
+        {
+            Token = activationToken,
+            Password = "MyP@ssw0rd!",
+            PasswordConfirmation = "MyP@ssw0rd!"
+        };
+
+        // Act
+        await _client.PostAsJsonAsync("/api/auth/set-password", setPasswordCommand);
+
+        // Assert
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var passwordHistory = await db.PasswordHistories
+                .Where(ph => ph.UserId == userId)
+                .ToListAsync();
+
+            passwordHistory.Should().HaveCount(1, "one password history entry should be created");
+            passwordHistory[0].PasswordHash.Should().StartWith("$2", "history should store BCrypt hash");
+        }
+    }
+
+    [Fact]
+    public async Task POST_SetPassword_MarksTokenAsUsed()
+    {
+        // Arrange
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string activationToken;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            token.IsUsed.Should().BeFalse("token should not be used before setting password");
+            activationToken = token.Token;
+        }
+
+        var setPasswordCommand = new
+        {
+            Token = activationToken,
+            Password = "MyP@ssw0rd!",
+            PasswordConfirmation = "MyP@ssw0rd!"
+        };
+
+        // Act
+        await _client.PostAsJsonAsync("/api/auth/set-password", setPasswordCommand);
+
+        // Assert
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var token = await db.ActivationTokens.FirstAsync(t => t.Token == activationToken);
+            token.IsUsed.Should().BeTrue("token should be marked as used after setting password");
+        }
+    }
+
+    [Fact]
+    public async Task POST_SetPassword_WithWeakPassword_Returns400()
+    {
+        // Arrange
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string activationToken;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            activationToken = token.Token;
+        }
+
+        var setPasswordCommand = new
+        {
+            Token = activationToken,
+            Password = "weak", // Too short, missing uppercase, digit, special char
+            PasswordConfirmation = "weak"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/set-password", setPasswordCommand);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var errorContent = await response.Content.ReadAsStringAsync();
+        errorContent.Should().Contain("Password", "error should mention password validation");
+    }
+
+    [Fact]
+    public async Task POST_SetPassword_WithExpiredToken_Returns400()
+    {
+        // Arrange
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string expiredToken;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+
+            // Manually expire token
+            var expiresAtProperty = token.GetType().GetProperty("ExpiresAt");
+            expiresAtProperty!.SetValue(token, DateTime.UtcNow.AddHours(-1));
+            await db.SaveChangesAsync();
+
+            expiredToken = token.Token;
+        }
+
+        var setPasswordCommand = new
+        {
+            Token = expiredToken,
+            Password = "MyP@ssw0rd!",
+            PasswordConfirmation = "MyP@ssw0rd!"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/set-password", setPasswordCommand);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var errorContent = await response.Content.ReadAsStringAsync();
+        errorContent.Should().Contain("expired", "error should indicate token is expired");
+    }
+
+    [Fact]
+    public async Task POST_SetPassword_WithMismatchedConfirmation_Returns400()
+    {
+        // Arrange
+        var registerCommand = new RegisterUserCommand
+        {
+            FirstName = "Jan",
+            LastName = "Kowalski",
+            Email = "jan@example.com",
+            Phone = "+48123456789",
+            Pesel = "12345678901"
+        };
+        await _client.PostAsJsonAsync("/api/auth/register", registerCommand);
+
+        string activationToken;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == registerCommand.Email.ToLowerInvariant());
+            var token = await db.ActivationTokens.FirstAsync(t => t.UserId == user.Id);
+            activationToken = token.Token;
+        }
+
+        var setPasswordCommand = new
+        {
+            Token = activationToken,
+            Password = "MyP@ssw0rd!",
+            PasswordConfirmation = "DifferentP@ssw0rd!" // Mismatch
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/set-password", setPasswordCommand);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var errorContent = await response.Content.ReadAsStringAsync();
+        errorContent.Should().Contain("Password", "error should mention password validation");
+    }
+
+    [Fact]
+    public async Task POST_SetPassword_WithInvalidToken_Returns400()
+    {
+        // Arrange
+        var setPasswordCommand = new
+        {
+            Token = "invalid-token-that-does-not-exist",
+            Password = "MyP@ssw0rd!",
+            PasswordConfirmation = "MyP@ssw0rd!"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/auth/set-password", setPasswordCommand);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var errorContent = await response.Content.ReadAsStringAsync();
+        errorContent.Should().Contain("invalid", "error should indicate token is invalid");
     }
 }
 

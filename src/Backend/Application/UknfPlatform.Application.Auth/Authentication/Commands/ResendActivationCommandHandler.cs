@@ -70,7 +70,7 @@ public class ResendActivationCommandHandler : IRequestHandler<ResendActivationCo
         _logger.LogInformation("New activation token generated for user {UserId}", user.Id);
 
         // Generate activation URL
-        var activationUrl = $"{_applicationSettings.FrontendUrl}/auth/activate?token={activationToken.Token}";
+        var activationUrl = $"{_applicationSettings.FrontendUrl}/set-password?token={activationToken.Token}";
 
         // Send activation email
         try

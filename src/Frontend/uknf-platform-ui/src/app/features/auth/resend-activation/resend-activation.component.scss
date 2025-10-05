@@ -1,4 +1,54 @@
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
 :host {
   display: block;
 }
 
+// Override Tailwind gradient with new primary color
+.bg-gradient-to-br {
+  background: $gradient-primary !important;
+}
+
+// Override PrimeNG styles
+::ng-deep {
+  p-button {
+    button {
+      background: $gradient-primary !important;
+      border-color: $primary-color !important;
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, $primary-light 0%, $secondary-color 100%) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba($primary-color, 0.4) !important;
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+    }
+  }
+
+  a {
+    color: $primary-color !important;
+
+    &:hover {
+      color: $primary-light !important;
+    }
+  }
+
+  input {
+    &:focus {
+      border-color: $primary-color !important;
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25) !important;
+    }
+  }
+
+  .p-message {
+    &.p-message-info {
+      background-color: $info-bg;
+      border-color: $info-border;
+      color: $info-text;
+    }
+  }
+}

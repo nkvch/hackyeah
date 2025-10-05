@@ -1,0 +1,96 @@
+<div class="page-container">
+  <div class="page-card">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-top">
+        <button class="btn-back" routerLink="/profile">
+          <span class="icon">←</span> Back to Profile
+        </button>
+      </div>
+      <h1 class="page-title">My Access Request</h1>
+      <p class="page-subtitle">View your access request status and details</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading your access request...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorMessage && !isLoading" class="alert alert-error">
+      <span class="icon">⚠️</span>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Access Request Data -->
+    <div *ngIf="accessRequest && !isLoading" class="access-request-content">
+      <!-- Status Badge -->
+      <div class="status-section">
+        <label class="field-label">Status</label>
+        <span [class]="'status-badge ' + getStatusClass(accessRequest.status)">
+          {{ getStatusLabel(accessRequest.status) }}
+        </span>
+        <p class="status-help" *ngIf="accessRequest.isEditable">
+          Your request is in draft mode. You can edit it before submitting.
+        </p>
+        <p class="status-help" *ngIf="!accessRequest.isEditable && accessRequest.status === 'New'">
+          Your request has been submitted and is awaiting review by UKNF.
+        </p>
+      </div>
+
+      <!-- Personal Information -->
+      <div class="info-section">
+        <h2 class="section-title">Personal Information</h2>
+        <div class="info-grid">
+          <div class="info-field">
+            <label class="field-label">First Name</label>
+            <p class="field-value">{{ accessRequest.firstName }}</p>
+          </div>
+
+          <div class="info-field">
+            <label class="field-label">Last Name</label>
+            <p class="field-value">{{ accessRequest.lastName }}</p>
+          </div>
+
+          <div class="info-field">
+            <label class="field-label">Email</label>
+            <p class="field-value">{{ accessRequest.email }}</p>
+          </div>
+
+          <div class="info-field">
+            <label class="field-label">Phone Number</label>
+            <p class="field-value">{{ accessRequest.phoneNumber }}</p>
+          </div>
+
+          <div class="info-field">
+            <label class="field-label">PESEL</label>
+            <p class="field-value">{{ accessRequest.peselMasked }}</p>
+          </div>
+
+          <div class="info-field">
+            <label class="field-label">Created Date</label>
+            <p class="field-value">{{ accessRequest.createdDate | date:'medium' }}</p>
+          </div>
+
+          <div class="info-field" *ngIf="accessRequest.submittedDate">
+            <label class="field-label">Submitted Date</label>
+            <p class="field-value">{{ accessRequest.submittedDate | date:'medium' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Box -->
+      <div class="info-box">
+        <h3 class="info-box-title">ℹ️ What's Next?</h3>
+        <ul class="info-list">
+          <li *ngIf="accessRequest.isEditable">Complete and submit your access request to gain platform permissions.</li>
+          <li *ngIf="!accessRequest.isEditable && accessRequest.status === 'New'">A UKNF employee will review your request and grant appropriate permissions.</li>
+          <li *ngIf="accessRequest.status === 'Accepted'">Your access has been approved! You can now use all platform features based on your assigned permissions.</li>
+          <li>Once approved, you'll be able to submit reports and communicate with UKNF.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -29,6 +29,25 @@ services:
     networks:
       - uknf-network
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: uknf-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - uknf-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./src/Backend
@@ -45,6 +64,9 @@ services:
       - EmailSettings__FromEmail=noreply@uknf.gov.pl
       - EmailSettings__FromName=UKNF Communication Platform
       - ApplicationSettings__FrontendUrl=http://localhost:4200
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
     ports:
       - "8080:8080"
     depends_on:
@@ -52,6 +74,8 @@ services:
         condition: service_healthy
       maildev:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - uknf-network
 
@@ -69,6 +93,7 @@ services:
 
 volumes:
   postgres_data:
+  rabbitmq_data:
 
 networks:
   uknf-network:

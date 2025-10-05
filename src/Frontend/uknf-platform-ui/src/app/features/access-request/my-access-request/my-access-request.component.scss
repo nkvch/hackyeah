@@ -1,0 +1,219 @@
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
+.page-container {
+  @include page-container;
+}
+
+.page-card {
+  @include card;
+  width: 100%;
+  max-width: 900px;
+  margin-top: 2rem;
+
+  @media (max-width: $breakpoint-md) {
+    margin-top: 1rem;
+  }
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: $spacing-xl;
+  padding-bottom: $spacing-lg;
+  border-bottom: 2px solid $gray-200;
+}
+
+.header-top {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: $spacing-md;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-md;
+  background: none;
+  border: 1px solid $gray-300;
+  border-radius: $radius-md;
+  color: $gray-700;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:hover {
+    background-color: $gray-50;
+    border-color: $primary-color;
+    color: $primary-color;
+  }
+
+  .icon {
+    font-size: 1rem;
+  }
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: $gray-800;
+  margin: 0 0 $spacing-sm 0;
+}
+
+.page-subtitle {
+  font-size: 0.95rem;
+  color: $gray-600;
+  margin: 0;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-3xl;
+  gap: $spacing-md;
+  color: $gray-600;
+}
+
+.spinner {
+  @include spinner;
+}
+
+.alert {
+  @include alert($error-bg, $error-border, $error-text);
+  
+  &.alert-error {
+    @include alert($error-bg, $error-border, $error-text);
+  }
+}
+
+.access-request-content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+}
+
+.status-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  font-weight: 600;
+  width: fit-content;
+
+  &.status-working {
+    background-color: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FCD34D;
+  }
+
+  &.status-new {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+    border: 1px solid #60A5FA;
+  }
+
+  &.status-accepted {
+    background-color: $success-bg;
+    color: $success-text;
+    border: 1px solid $success-border;
+  }
+
+  &.status-blocked {
+    background-color: $error-bg;
+    color: $error-text;
+    border: 1px solid $error-border;
+  }
+
+  &.status-updated {
+    background-color: #E0E7FF;
+    color: #3730A3;
+    border: 1px solid #818CF8;
+  }
+}
+
+.status-help {
+  font-size: 0.875rem;
+  color: $gray-600;
+  margin: 0;
+}
+
+.info-section {
+  border-top: 1px solid $gray-200;
+  padding-top: $spacing-lg;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $gray-800;
+  margin: 0 0 $spacing-lg 0;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: $spacing-lg;
+}
+
+.info-field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $gray-700;
+}
+
+.field-value {
+  font-size: 1rem;
+  color: $gray-900;
+  margin: 0;
+  padding: $spacing-sm;
+  background-color: $gray-50;
+  border-radius: $radius-sm;
+  border: 1px solid $gray-200;
+}
+
+.info-box {
+  background-color: $info-bg;
+  border: 1px solid $info-border;
+  border-left: 4px solid $primary-color;
+  border-radius: $radius-md;
+  padding: $spacing-lg;
+}
+
+.info-box-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: $gray-800;
+  margin: 0 0 $spacing-md 0;
+}
+
+.info-list {
+  margin: 0;
+  padding-left: $spacing-lg;
+  
+  li {
+    color: $gray-700;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin-bottom: $spacing-sm;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}

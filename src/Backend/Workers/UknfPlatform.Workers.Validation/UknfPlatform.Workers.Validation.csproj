@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>uknf-workers-validation</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.2.0" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Polly" Version="8.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Application\UknfPlatform.Application.Shared\UknfPlatform.Application.Shared.csproj" />
+    <ProjectReference Include="..\..\Domain\UknfPlatform.Domain.Communication\UknfPlatform.Domain.Communication.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\UknfPlatform.Infrastructure.Persistence\UknfPlatform.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\UknfPlatform.Infrastructure.Validation\UknfPlatform.Infrastructure.Validation.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\UknfPlatform.Infrastructure.FileStorage\UknfPlatform.Infrastructure.FileStorage.csproj" />
+  </ItemGroup>
+
+</Project>
+

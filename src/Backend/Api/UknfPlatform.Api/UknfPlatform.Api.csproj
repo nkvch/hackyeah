@@ -8,6 +8,9 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.0" />
+    <PackageReference Include="MassTransit" Version="8.2.0" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.20" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -18,9 +21,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Application\UknfPlatform.Application.Auth\UknfPlatform.Application.Auth.csproj" />
+    <ProjectReference Include="..\..\Application\UknfPlatform.Application.Communication\UknfPlatform.Application.Communication.csproj" />
     <ProjectReference Include="..\..\Application\UknfPlatform.Application.Shared\UknfPlatform.Application.Shared.csproj" />
     <ProjectReference Include="..\..\Infrastructure\UknfPlatform.Infrastructure.Persistence\UknfPlatform.Infrastructure.Persistence.csproj" />
     <ProjectReference Include="..\..\Infrastructure\UknfPlatform.Infrastructure.Identity\UknfPlatform.Infrastructure.Identity.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\UknfPlatform.Infrastructure.FileStorage\UknfPlatform.Infrastructure.FileStorage.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\UknfPlatform.Infrastructure.Validation\UknfPlatform.Infrastructure.Validation.csproj" />
   </ItemGroup>
 
 </Project>

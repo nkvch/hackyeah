@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Domain\UknfPlatform.Domain.Shared\UknfPlatform.Domain.Shared.csproj" />
     <ProjectReference Include="..\..\Domain\UknfPlatform.Domain.Auth\UknfPlatform.Domain.Auth.csproj" />
+    <ProjectReference Include="..\..\Domain\UknfPlatform.Domain.Communication\UknfPlatform.Domain.Communication.csproj" />
   </ItemGroup>
 
   <ItemGroup>

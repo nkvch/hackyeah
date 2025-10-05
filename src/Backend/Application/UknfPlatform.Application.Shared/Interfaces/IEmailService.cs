@@ -30,5 +30,18 @@ public interface IEmailService
         string firstName,
         string resetUrl,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends an email change confirmation email to the new email address
+    /// </summary>
+    /// <param name="email">New email address to confirm</param>
+    /// <param name="firstName">User's first name for personalization</param>
+    /// <param name="confirmationUrl">Email change confirmation URL with token</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task SendEmailChangeConfirmationAsync(
+        string email,
+        string firstName,
+        string confirmationUrl,
+        CancellationToken cancellationToken = default);
 }
 

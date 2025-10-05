@@ -51,6 +51,19 @@ public class EmailService : IEmailService
         await SendEmailWithRetryAsync(email, subject, htmlBody, textBody, cancellationToken);
     }
 
+    public async Task SendEmailChangeConfirmationAsync(
+        string email,
+        string firstName,
+        string confirmationUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var subject = "Confirm Your New Email Address";
+        var htmlBody = GetEmailChangeConfirmationTemplate(firstName, email, confirmationUrl);
+        var textBody = $"Hello {firstName},\n\nYou requested to change your email address to {email}.\n\nPlease confirm this change by clicking the link: {confirmationUrl}\n\nThis link will expire in 24 hours.\n\nIf you didn't request this change, please ignore this email and contact our support.\n\nBest regards,\nUKNF Communication Platform";
+
+        await SendEmailWithRetryAsync(email, subject, htmlBody, textBody, cancellationToken);
+    }
+
     private async Task SendEmailWithRetryAsync(
         string toEmail,
         string subject,
@@ -239,6 +252,78 @@ public class EmailService : IEmailService
                             <div style=""background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;"">
                                 <p style=""color: #991b1b; margin: 0; font-size: 14px;"">
                                     <strong>🔒 Security:</strong> If you didn't request a password reset, please ignore this email. Your password will remain unchanged.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 20px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;"">
+                            <p style=""color: #6b7280; margin: 0; font-size: 12px; line-height: 1.5;"">
+                                <strong>Support:</strong> <a href=""mailto:support@uknf.gov.pl"" style=""color: #1e40af;"">support@uknf.gov.pl</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>";
+    }
+
+    private string GetEmailChangeConfirmationTemplate(string firstName, string newEmail, string confirmationUrl)
+    {
+        return $@"
+<!DOCTYPE html>
+<html lang=""pl"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Confirm Email Change</title>
+</head>
+<body style=""margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;"">
+    <table border=""0"" cellpadding=""0"" cellspacing=""0"" width=""100%"">
+        <tr>
+            <td align=""center"" style=""padding: 40px 0;"">
+                <table border=""0"" cellpadding=""0"" cellspacing=""0"" width=""600"" style=""background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"">
+                    <tr>
+                        <td align=""center"" style=""padding: 40px 40px 20px 40px;"">
+                            <h1 style=""color: #1e40af; margin: 0; font-size: 28px;"">UKNF Communication Platform</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style=""padding: 20px 40px;"">
+                            <h2 style=""color: #333333; margin: 0 0 20px 0; font-size: 24px;"">Confirm Your New Email Address</h2>
+                            <p style=""color: #666666; line-height: 1.6; margin: 0 0 20px 0;"">
+                                Hello {firstName},
+                            </p>
+                            <p style=""color: #666666; line-height: 1.6; margin: 0 0 20px 0;"">
+                                You requested to change your email address to <strong>{newEmail}</strong>.
+                            </p>
+                            <p style=""color: #666666; line-height: 1.6; margin: 0 0 20px 0;"">
+                                To complete this change, please confirm your new email address by clicking the button below.
+                            </p>
+                            <table border=""0"" cellpadding=""0"" cellspacing=""0"" width=""100%"">
+                                <tr>
+                                    <td align=""center"" style=""padding: 30px 0;"">
+                                        <a href=""{confirmationUrl}"" style=""background-color: #1e40af; color: #ffffff; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold; display: inline-block;"">Confirm Email Change</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style=""color: #666666; line-height: 1.6; margin: 0 0 10px 0; font-size: 14px;"">
+                                Or copy and paste this link into your browser:
+                            </p>
+                            <p style=""color: #1e40af; line-height: 1.6; margin: 0 0 20px 0; font-size: 12px; word-break: break-all;"">
+                                {confirmationUrl}
+                            </p>
+                            <div style=""background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;"">
+                                <p style=""color: #92400e; margin: 0; font-size: 14px;"">
+                                    <strong>⚠️ Important:</strong> This confirmation link will expire in 24 hours.
+                                </p>
+                            </div>
+                            <div style=""background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;"">
+                                <p style=""color: #991b1b; margin: 0; font-size: 14px;"">
+                                    <strong>🔒 Security:</strong> If you didn't request this email change, please ignore this email and contact our support immediately. Your current email address will remain unchanged.
                                 </p>
                             </div>
                         </td>

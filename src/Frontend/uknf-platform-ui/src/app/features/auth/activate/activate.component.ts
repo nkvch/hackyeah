@@ -26,22 +26,23 @@ export class ActivateComponent implements OnInit {
   state: ActivationState = 'loading';
   errorMessage = '';
   successMessage = '';
+  token = '';
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private authService = inject(AuthService);
 
   ngOnInit(): void {
     // Get token from query parameters
-    const token = this.route.snapshot.queryParamMap.get('token');
+    this.token = this.route.snapshot.queryParamMap.get('token') || '';
 
-    if (!token) {
+    if (!this.token) {
       this.state = 'error-invalid';
       this.errorMessage = 'No activation token provided';
       return;
     }
 
     // Activate account
-    this.activateAccount(token);
+    this.activateAccount(this.token);
   }
 
   private activateAccount(token: string): void {
@@ -73,8 +74,8 @@ export class ActivateComponent implements OnInit {
   }
 
   onSetPassword(): void {
-    // Navigate to password creation page (Story 1.3)
-    this.router.navigate(['/auth/set-password']);
+    // Navigate to password creation page (Story 1.3) with token
+    this.router.navigate(['/auth/set-password'], { queryParams: { token: this.token } });
   }
 
   onRequestNewLink(): void {

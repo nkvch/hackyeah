@@ -1,0 +1,67 @@
+using FluentAssertions;
+using MassTransit;
+using MediatR;
+using Microsoft.Extensions.Logging;
+using Moq;
+using UknfPlatform.Application.Communication.Reports.Events;
+using UknfPlatform.Domain.Communication.Entities;
+using UknfPlatform.Domain.Communication.Events;
+using UknfPlatform.Domain.Communication.Enums;
+using UknfPlatform.Domain.Communication.Interfaces;
+using Xunit;
+
+namespace UknfPlatform.UnitTests.Application.Communication;
+
+public class ReportSubmittedEventHandlerTests
+{
+    private readonly Mock<IReportRepository> _reportRepository = new();
+    private readonly Mock<IPublishEndpoint> _publishEndpoint = new();
+    private readonly Mock<ILogger<ReportSubmittedEventHandler>> _logger = new();
+
+    [Fact]
+    public async Task Handle_ShouldSetStatusToTransmitted_AndPublishJob()
+    {
+        // Arrange
+        var report = Report.Create(
+            entityId: 1001,
+            userId: Guid.NewGuid(),
+            fileName: "report.xlsx",
+            fileStorageKey: "storage/key",
+            fileSize: 1024,
+            reportType: "Quarterly",
+            reportingPeriod: "Q1_2025");
+
+        _reportRepository.Setup(r => r.GetByIdAsync(report.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(report);
+
+        var handler = new ReportSubmittedEventHandler(
+            _reportRepository.Object,
+            _publishEndpoint.Object,
+            _logger.Object);
+
+        var evt = new ReportSubmittedEvent
+        {
+            ReportId = report.Id,
+            EntityId = 1001,
+            UserId = Guid.NewGuid(),
+            FileName = "report.xlsx",
+            FileStorageKey = "storage/key",
+            ReportType = "Quarterly",
+            ReportingPeriod = "Q1_2025",
+            SubmittedDate = DateTime.UtcNow
+        };
+
+        // Act
+        await handler.Handle(evt, CancellationToken.None);
+
+        // Assert
+        report.ValidationStatus.Should().Be(ValidationStatus.Transmitted);
+        report.UniqueValidationId.Should().NotBeNullOrWhiteSpace();
+
+        _reportRepository.Verify(r => r.UpdateAsync(report, It.IsAny<CancellationToken>()), Times.Once);
+        _reportRepository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+        _publishEndpoint.Verify(p => p.Publish(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+}
+

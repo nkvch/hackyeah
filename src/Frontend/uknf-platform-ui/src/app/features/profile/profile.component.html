@@ -1,0 +1,208 @@
+<div class="profile-container">
+  <div class="profile-card">
+    <!-- Header -->
+    <div class="profile-header">
+      <h1 class="profile-title">My Profile</h1>
+      <div class="header-actions">
+        <button 
+          *ngIf="!isEditMode && !isLoading" 
+          class="btn btn-secondary"
+          routerLink="/access-request">
+          <span class="icon">📋</span> Access Request
+        </button>
+        <button 
+          *ngIf="!isEditMode && !isLoading" 
+          class="btn btn-secondary btn-logout"
+          (click)="onLogout()">
+          <span class="icon">🚪</span> Logout
+        </button>
+        <button 
+          *ngIf="!isEditMode && !isLoading" 
+          class="btn btn-primary"
+          (click)="enableEditMode()">
+          <span class="icon">✏️</span> Edit Profile
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading...</p>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <span class="icon">✅</span>
+      {{ successMessage }}
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      <span class="icon">⚠️</span>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Profile Content -->
+    <div *ngIf="profile && !isLoading" class="profile-content">
+      
+      <!-- Pending Email Notice -->
+      <div *ngIf="profile.pendingEmail" class="alert alert-info">
+        <span class="icon">📧</span>
+        <strong>Email change pending:</strong> Awaiting confirmation at {{ profile.pendingEmail }}
+      </div>
+
+      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+        
+        <!-- Personal Information -->
+        <section class="form-section">
+          <h2 class="section-title">Personal Information</h2>
+
+          <div class="form-row">
+            <!-- First Name -->
+            <div class="form-group">
+              <label for="firstName" class="form-label">
+                First Name <span class="required">*</span>
+              </label>
+              <input
+                id="firstName"
+                type="text"
+                formControlName="firstName"
+                class="form-input"
+                [class.error]="isFieldInvalid('firstName')"
+                placeholder="Enter your first name"
+              />
+              <span *ngIf="isFieldInvalid('firstName')" class="error-message">
+                {{ getFieldError('firstName') }}
+              </span>
+            </div>
+
+            <!-- Last Name -->
+            <div class="form-group">
+              <label for="lastName" class="form-label">
+                Last Name <span class="required">*</span>
+              </label>
+              <input
+                id="lastName"
+                type="text"
+                formControlName="lastName"
+                class="form-input"
+                [class.error]="isFieldInvalid('lastName')"
+                placeholder="Enter your last name"
+              />
+              <span *ngIf="isFieldInvalid('lastName')" class="error-message">
+                {{ getFieldError('lastName') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- Phone Number -->
+            <div class="form-group">
+              <label for="phoneNumber" class="form-label">
+                Phone Number <span class="required">*</span>
+              </label>
+              <input
+                id="phoneNumber"
+                type="tel"
+                formControlName="phoneNumber"
+                class="form-input"
+                [class.error]="isFieldInvalid('phoneNumber')"
+                placeholder="+48123456789"
+              />
+              <span *ngIf="isFieldInvalid('phoneNumber')" class="error-message">
+                {{ getFieldError('phoneNumber') }}
+              </span>
+              <span class="help-text">International format with country code</span>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label for="email" class="form-label">
+                Email Address <span class="required">*</span>
+              </label>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                class="form-input"
+                [class.error]="isFieldInvalid('email')"
+                placeholder="your.email@example.com"
+              />
+              <span *ngIf="isFieldInvalid('email')" class="error-message">
+                {{ getFieldError('email') }}
+              </span>
+              <span *ngIf="isEditMode && profileForm.get('email')?.value !== profile.email" class="help-text info">
+                ℹ️ Email changes require confirmation via the new email address
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Account Information (Read-only) -->
+        <section class="form-section">
+          <h2 class="section-title">Account Information</h2>
+
+          <div class="form-row">
+            <!-- PESEL (Masked) -->
+            <div class="form-group">
+              <label class="form-label">PESEL</label>
+              <div class="readonly-field">
+                <span class="masked-value">***********{{ profile.peselLast4 }}</span>
+                <span class="badge">Protected</span>
+              </div>
+              <span class="help-text">PESEL cannot be changed</span>
+            </div>
+
+            <!-- User Type -->
+            <div class="form-group">
+              <label class="form-label">Account Type</label>
+              <div class="readonly-field">
+                <span class="badge badge-info">{{ profile.userType }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- Created Date -->
+            <div class="form-group">
+              <label class="form-label">Account Created</label>
+              <div class="readonly-field">
+                {{ formatDate(profile.createdDate) }}
+              </div>
+            </div>
+
+            <!-- Last Login -->
+            <div class="form-group">
+              <label class="form-label">Last Login</label>
+              <div class="readonly-field">
+                {{ formatDate(profile.lastLoginDate) }}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Action Buttons -->
+        <div class="form-actions" *ngIf="isEditMode">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="cancelEdit()"
+            [disabled]="isLoading">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="profileForm.invalid || isLoading">
+            <span *ngIf="!isLoading">Save Changes</span>
+            <span *ngIf="isLoading">
+              <span class="spinner-small"></span> Saving...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

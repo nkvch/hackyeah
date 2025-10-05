@@ -1,22 +1,29 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using UknfPlatform.Domain.Auth.Entities;
 using UknfPlatform.Domain.Auth.Interfaces;
+using UknfPlatform.Domain.Auth.Repositories;
+using UknfPlatform.Domain.Shared.Exceptions;
 
 namespace UknfPlatform.Application.Auth.Authentication.Commands;
 
 /// <summary>
 /// Handler for ActivateAccountCommand
+/// Story 2.1: Automatically creates access request after activation
 /// </summary>
 public class ActivateAccountCommandHandler : IRequestHandler<ActivateAccountCommand, ActivateAccountResponse>
 {
     private readonly IActivationTokenRepository _activationTokenRepository;
+    private readonly IAccessRequestRepository _accessRequestRepository;
     private readonly ILogger<ActivateAccountCommandHandler> _logger;
 
     public ActivateAccountCommandHandler(
         IActivationTokenRepository activationTokenRepository,
+        IAccessRequestRepository accessRequestRepository,
         ILogger<ActivateAccountCommandHandler> logger)
     {
         _activationTokenRepository = activationTokenRepository ?? throw new ArgumentNullException(nameof(activationTokenRepository));
+        _accessRequestRepository = accessRequestRepository ?? throw new ArgumentNullException(nameof(accessRequestRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -33,8 +40,8 @@ public class ActivateAccountCommandHandler : IRequestHandler<ActivateAccountComm
             throw new InvalidTokenException("Activation link is invalid");
         }
 
-        // Check if token is expired
-        if (activationToken.IsExpired())
+        // Check if token is valid (not expired and not used)
+        if (!activationToken.IsValid())
         {
             _logger.LogWarning("Activation attempt with expired token for user {UserId}", activationToken.UserId);
             throw new TokenExpiredException("Activation link has expired. Please request a new one.");
@@ -77,35 +84,27 @@ public class ActivateAccountCommandHandler : IRequestHandler<ActivateAccountComm
         await _activationTokenRepository.UpdateAsync(activationToken, cancellationToken);
         await _activationTokenRepository.SaveChangesAsync(cancellationToken);
 
+        // Story 2.1: Automatically create access request after activation
+        var existingAccessRequest = await _accessRequestRepository.GetByUserIdAsync(activationToken.User.Id, cancellationToken);
+        if (existingAccessRequest == null)
+        {
+            var accessRequest = AccessRequest.CreateForUser(activationToken.User.Id);
+            await _accessRequestRepository.AddAsync(accessRequest, cancellationToken);
+            await _activationTokenRepository.SaveChangesAsync(cancellationToken); // Reuse same UnitOfWork
+            
+            _logger.LogInformation("Access request created automatically for user {UserId}, RequestId: {AccessRequestId}", 
+                activationToken.User.Id, accessRequest.Id);
+        }
+        else
+        {
+            _logger.LogInformation("Access request already exists for user {UserId}, skipping creation", activationToken.User.Id);
+        }
+
         _logger.LogInformation("Account activated successfully for user {UserId}", activationToken.User.Id);
 
         return new ActivateAccountResponse(
             activationToken.User.Id,
             "Account activated successfully. Please set your password to continue.");
     }
-}
-
-/// <summary>
-/// Exception thrown when an invalid token is provided
-/// </summary>
-public class InvalidTokenException : Exception
-{
-    public InvalidTokenException(string message) : base(message) { }
-}
-
-/// <summary>
-/// Exception thrown when a token has expired
-/// </summary>
-public class TokenExpiredException : Exception
-{
-    public TokenExpiredException(string message) : base(message) { }
-}
-
-/// <summary>
-/// Exception thrown when a token has already been used
-/// </summary>
-public class TokenAlreadyUsedException : Exception
-{
-    public TokenAlreadyUsedException(string message) : base(message) { }
 }
 

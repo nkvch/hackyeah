@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Domain\UknfPlatform.Domain.Shared\UknfPlatform.Domain.Shared.csproj" />
+    <ProjectReference Include="..\..\Domain\UknfPlatform.Domain.Auth\UknfPlatform.Domain.Auth.csproj" />
   </ItemGroup>
 
   <ItemGroup>

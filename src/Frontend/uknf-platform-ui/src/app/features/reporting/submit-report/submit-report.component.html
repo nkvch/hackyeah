@@ -1,0 +1,241 @@
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Submit Report</h1>
+    <nav class="text-sm text-gray-600">
+      <a href="/" class="hover:text-blue-600">Home</a> / 
+      <span class="text-gray-900">Submit Report</span>
+    </nav>
+  </div>
+
+  <!-- Success Message -->
+  @if (success) {
+    <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+      <div class="flex items-start">
+        <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <p class="text-green-800 text-sm">{{ success }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (error) {
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div class="flex items-start">
+        <svg class="w-5 h-5 text-red-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        <p class="text-red-800 text-sm">{{ error }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- Form Card -->
+  <div class="bg-white rounded-lg shadow-md">
+    <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
+      
+      <!-- Entity Selection Section -->
+      @if (showMultipleEntities) {
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Entity Selection</h2>
+          
+          <div class="space-y-4">
+            <div>
+              <label for="entityId" class="block text-sm font-medium text-gray-700 mb-2">
+                Select Entity <span class="text-red-500">*</span>
+              </label>
+              <select 
+                id="entityId"
+                formControlName="entityId"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                [class.border-red-500]="entityId?.invalid && entityId?.touched">
+                <option [ngValue]="null">-- Select Entity --</option>
+                @for (entity of entities; track entity.entityId) {
+                  <option [ngValue]="entity.entityId">
+                    {{ entity.name }} ({{ entity.entityId }})
+                  </option>
+                }
+              </select>
+              @if (entityId?.invalid && entityId?.touched) {
+                <p class="mt-1 text-sm text-red-600">Entity selection is required</p>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Report Information Section -->
+      <div class="p-6 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Report Information</h2>
+        
+        <div class="space-y-4">
+          <!-- Report Type -->
+          <div>
+            <label for="reportType" class="block text-sm font-medium text-gray-700 mb-2">
+              Report Type <span class="text-red-500">*</span>
+            </label>
+            <select 
+              id="reportType"
+              formControlName="reportType"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              [class.border-red-500]="reportType?.invalid && reportType?.touched">
+              <option value="">-- Select Report Type --</option>
+              @for (type of reportTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+            @if (reportType?.invalid && reportType?.touched) {
+              <p class="mt-1 text-sm text-red-600">Report type is required</p>
+            }
+          </div>
+
+          <!-- Reporting Period -->
+          <div>
+            <label for="reportingPeriod" class="block text-sm font-medium text-gray-700 mb-2">
+              Reporting Period <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text"
+              id="reportingPeriod"
+              formControlName="reportingPeriod"
+              placeholder="e.g., Q1_2025, Annual_2025, Monthly_01_2025"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              [class.border-red-500]="reportingPeriod?.invalid && reportingPeriod?.touched">
+            @if (reportingPeriod?.invalid && reportingPeriod?.touched) {
+              <p class="mt-1 text-sm text-red-600">
+                @if (reportingPeriod?.hasError('required')) {
+                  Reporting period is required
+                }
+                @if (reportingPeriod?.hasError('pattern')) {
+                  Invalid format. Use: Q1_2025, Annual_2025, or Monthly_01_2025
+                }
+              </p>
+            }
+            <p class="mt-1 text-xs text-gray-500">
+              Format: Q1_2025 (quarterly), Annual_2025 (annual), or Monthly_01_2025 (monthly)
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Upload Section -->
+      <div class="p-6 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">File Upload</h2>
+        
+        <!-- Info Box -->
+        <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 class="text-sm font-semibold text-blue-900 mb-2">File Requirements:</h3>
+          <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside">
+            <li>Format: XLSX only (Excel OpenXML)</li>
+            <li>Maximum size: 100 MB</li>
+            <li>The file will be validated for security and format compliance</li>
+          </ul>
+        </div>
+
+        <!-- File Input -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Select XLSX File <span class="text-red-500">*</span>
+            </label>
+            
+            <input 
+              type="file"
+              accept=".xlsx"
+              (change)="onFileSelected($event)"
+              class="block w-full text-sm text-gray-500
+                     file:mr-4 file:py-2 file:px-4
+                     file:rounded-lg file:border-0
+                     file:text-sm file:font-semibold
+                     file:bg-blue-50 file:text-blue-700
+                     hover:file:bg-blue-100
+                     cursor-pointer">
+          </div>
+
+          <!-- Selected File Info -->
+          @if (selectedFile) {
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div class="flex items-start justify-between">
+                <div class="flex items-start space-x-3">
+                  <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">{{ selectedFileName }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Size: {{ fileSizeFormatted }}</p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  (click)="clearFileSelection()"
+                  class="text-gray-400 hover:text-gray-600">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Upload Progress -->
+          @if (isUploading) {
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm text-gray-700">
+                <span>Uploading...</span>
+                <span>{{ uploadProgress }}%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                  [style.width.%]="uploadProgress">
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Validation Info Section -->
+      <div class="p-6 border-b border-gray-200 bg-gray-50">
+        <h3 class="text-sm font-semibold text-gray-900 mb-2">Validation Process:</h3>
+        <p class="text-sm text-gray-700 mb-2">
+          After submission, your report will go through the following stages:
+        </p>
+        <ol class="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+          <li><strong>Working:</strong> Report uploaded and queued for validation</li>
+          <li><strong>Transmitted:</strong> Sent to validation service</li>
+          <li><strong>Ongoing:</strong> Validation in progress</li>
+          <li><strong>Successful/Errors:</strong> Final result (within 24 hours)</li>
+        </ol>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="p-6 bg-gray-50 rounded-b-lg flex justify-end space-x-4">
+        <button 
+          type="button"
+          (click)="onCancel()"
+          [disabled]="isSubmitting"
+          class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          Cancel
+        </button>
+        <button 
+          type="submit"
+          [disabled]="isSubmitting || !selectedFile"
+          class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2">
+          @if (isSubmitting) {
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Submitting...</span>
+          } @else {
+            <span>Submit Report</span>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

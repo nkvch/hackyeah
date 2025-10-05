@@ -1,11 +1,153 @@
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
 :host {
   display: block;
 }
 
-// Override PrimeNG styles if needed
-::ng-deep {
-  .p-inputtext.ng-invalid.ng-touched {
-    border-color: #ef4444;
+.auth-container {
+  @include page-container;
+}
+
+.auth-card {
+  @include card;
+  width: 100%;
+  max-width: 700px;
+  margin-top: 2rem;
+
+  @media (max-width: $breakpoint-md) {
+    margin-top: 1rem;
   }
 }
 
+.auth-header {
+  text-align: center;
+  margin-bottom: $spacing-xl;
+  padding-bottom: $spacing-lg;
+  border-bottom: 2px solid $gray-200;
+}
+
+.auth-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: $gray-800;
+  margin: 0 0 $spacing-sm 0;
+
+  @media (max-width: $breakpoint-md) {
+    font-size: 1.5rem;
+  }
+}
+
+.auth-subtitle {
+  font-size: 0.95rem;
+  color: $gray-600;
+  margin: 0;
+}
+
+.alert {
+  @include alert($info-bg, $info-border, $info-text);
+
+  &.alert-success {
+    @include alert($success-bg, $success-border, $success-text);
+  }
+
+  &.alert-error {
+    @include alert($error-bg, $error-border, $error-text);
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-lg;
+
+  @media (max-width: $breakpoint-md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $gray-700;
+  margin-bottom: $spacing-sm;
+}
+
+.required {
+  color: $error-text;
+}
+
+.form-input {
+  @include form-input;
+}
+
+.help-text {
+  font-size: 0.8125rem;
+  color: $gray-500;
+  margin-top: 0.375rem;
+}
+
+.error-message {
+  color: $error-text;
+  font-size: 0.8125rem;
+  margin-top: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+
+  &::before {
+    content: '⚠️';
+  }
+}
+
+.btn-submit {
+  margin-top: $spacing-sm;
+}
+
+.btn {
+  @include btn-primary;
+}
+
+.spinner-small {
+  @include spinner-small;
+}
+
+.auth-footer {
+  margin-top: $spacing-xl;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $gray-200;
+  text-align: center;
+}
+
+.footer-text {
+  font-size: 0.875rem;
+  color: $gray-600;
+  margin: 0;
+}
+
+.link {
+  color: $primary-color;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color $transition-base;
+
+  &:hover {
+    color: $primary-light;
+    text-decoration: underline;
+  }
+}
+
+.icon {
+  font-size: 1rem;
+}
