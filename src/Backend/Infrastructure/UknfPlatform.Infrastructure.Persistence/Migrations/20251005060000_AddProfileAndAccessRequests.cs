@@ -6,8 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace UknfPlatform.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    [Migration("20251005014153")]
-    public partial class AddUserProfileManagement : Migration
+    public partial class AddProfileAndAccessRequests : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -61,11 +60,66 @@ namespace UknfPlatform.Infrastructure.Persistence.Migrations
                 name: "IX_EmailChangeTokens_IsUsed",
                 table: "EmailChangeTokens",
                 column: "IsUsed");
+
+            // Create AccessRequests table
+            migrationBuilder.CreateTable(
+                name: "AccessRequests",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    SubmittedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ReviewedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ReviewedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AccessRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AccessRequests_Users_ReviewedByUserId",
+                        column: x => x.ReviewedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AccessRequests_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AccessRequests_Status",
+                table: "AccessRequests",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AccessRequests_UserId",
+                table: "AccessRequests",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AccessRequests_UserId_Status",
+                table: "AccessRequests",
+                columns: new[] { "UserId", "Status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AccessRequests_ReviewedByUserId",
+                table: "AccessRequests",
+                column: "ReviewedByUserId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // Drop AccessRequests table
+            migrationBuilder.DropTable(
+                name: "AccessRequests");
+
             // Drop EmailChangeTokens table
             migrationBuilder.DropTable(
                 name: "EmailChangeTokens");

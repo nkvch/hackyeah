@@ -236,14 +236,99 @@ app.UseAuthentication(); // Must come before UseAuthorization
 app.UseAuthorization();
 app.MapControllers();
 
-// Apply database migrations (for development)
+// Apply database migrations automatically
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    if (app.Environment.IsDevelopment())
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
     {
-        // Apply pending migrations automatically
-        await db.Database.MigrateAsync();
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        logger.LogInformation("Checking for pending database migrations...");
+        var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
+        if (pendingMigrations.Any())
+        {
+            logger.LogInformation("Found {Count} pending migrations. Applying...", pendingMigrations.Count());
+            foreach (var migration in pendingMigrations)
+            {
+                logger.LogInformation("  - {Migration}", migration);
+            }
+            await db.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully!");
+        }
+        else
+        {
+            logger.LogInformation("Database is up to date. No migrations needed.");
+        }
+        // Apply schema fixes for columns/tables added after initial migrations
+        try
+        {
+            logger.LogInformation("Applying schema fixes...");
+            // Add PendingEmail column if missing
+            await db.Database.ExecuteSqlRawAsync(@"
+                DO $$ BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'Users' AND column_name = 'PendingEmail'
+                    ) THEN
+                        ALTER TABLE ""Users"" ADD COLUMN ""PendingEmail"" character varying(256) NULL;
+                    END IF;
+                END $$;
+            ");
+            // Create EmailChangeTokens table if missing
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS ""EmailChangeTokens"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""UserId"" uuid NOT NULL,
+                    ""NewEmail"" character varying(256) NOT NULL,
+                    ""Token"" character varying(500) NOT NULL UNIQUE,
+                    ""ExpiresAt"" timestamp with time zone NOT NULL,
+                    ""IsUsed"" boolean NOT NULL,
+                    ""CreatedDate"" timestamp with time zone NOT NULL,
+                    ""UpdatedDate"" timestamp with time zone NOT NULL,
+                    FOREIGN KEY (""UserId"") REFERENCES ""Users""(""Id"") ON DELETE CASCADE
+                );
+                CREATE INDEX IF NOT EXISTS ""IX_EmailChangeTokens_Token"" ON ""EmailChangeTokens""(""Token"");
+                CREATE INDEX IF NOT EXISTS ""IX_EmailChangeTokens_UserId_ExpiresAt"" ON ""EmailChangeTokens""(""UserId"", ""ExpiresAt"");
+                CREATE INDEX IF NOT EXISTS ""IX_EmailChangeTokens_IsUsed"" ON ""EmailChangeTokens""(""IsUsed"");
+            ");
+            
+            // Create AccessRequests table if missing
+            await db.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS ""AccessRequests"" (
+                    ""Id"" uuid PRIMARY KEY,
+                    ""UserId"" uuid NOT NULL,
+                    ""Status"" character varying(20) NOT NULL,
+                    ""SubmittedDate"" timestamp with time zone NULL,
+                    ""ReviewedByUserId"" uuid NULL,
+                    ""ReviewedDate"" timestamp with time zone NULL,
+                    ""CreatedDate"" timestamp with time zone NOT NULL,
+                    ""UpdatedDate"" timestamp with time zone NOT NULL,
+                    FOREIGN KEY (""UserId"") REFERENCES ""Users""(""Id"") ON DELETE RESTRICT,
+                    FOREIGN KEY (""ReviewedByUserId"") REFERENCES ""Users""(""Id"") ON DELETE RESTRICT
+                );
+                CREATE INDEX IF NOT EXISTS ""IX_AccessRequests_Status"" ON ""AccessRequests""(""Status"");
+                CREATE INDEX IF NOT EXISTS ""IX_AccessRequests_UserId"" ON ""AccessRequests""(""UserId"");
+                CREATE INDEX IF NOT EXISTS ""IX_AccessRequests_UserId_Status"" ON ""AccessRequests""(""UserId"", ""Status"");
+                CREATE INDEX IF NOT EXISTS ""IX_AccessRequests_ReviewedByUserId"" ON ""AccessRequests""(""ReviewedByUserId"");
+            ");
+            
+            logger.LogInformation("Schema fixes applied successfully!");
+        }
+        catch (Exception schemaEx)
+        {
+            logger.LogWarning(schemaEx, "Schema fix failed. This may be normal if using non-PostgreSQL database.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while applying database migrations. Application will continue, but database may be in inconsistent state.");
+        // In development, we want to see this error clearly
+        if (app.Environment.IsDevelopment())
+        {
+            throw;
+        }
     }
 }
 

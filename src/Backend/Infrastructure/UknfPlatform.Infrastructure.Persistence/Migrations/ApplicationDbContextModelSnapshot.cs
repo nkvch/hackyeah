@@ -318,6 +318,52 @@ namespace UknfPlatform.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("UknfPlatform.Domain.Auth.Entities.AccessRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ReviewedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("SubmittedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewedByUserId")
+                        .HasDatabaseName("IX_AccessRequests_ReviewedByUserId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_AccessRequests_Status");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_AccessRequests_UserId");
+
+                    b.HasIndex("UserId", "Status")
+                        .HasDatabaseName("IX_AccessRequests_UserId_Status");
+
+                    b.ToTable("AccessRequests", (string)null);
+                });
+
             modelBuilder.Entity("UknfPlatform.Domain.Communication.Entities.Report", b =>
                 {
                     b.Property<Guid>("Id")
@@ -476,6 +522,23 @@ namespace UknfPlatform.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("UknfPlatform.Domain.Auth.Entities.AccessRequest", b =>
+                {
+                    b.HasOne("UknfPlatform.Domain.Auth.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("UknfPlatform.Domain.Auth.Entities.User", "ReviewedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("User");
+                    b.Navigation("ReviewedByUser");
                 });
 #pragma warning restore 612, 618
         }
